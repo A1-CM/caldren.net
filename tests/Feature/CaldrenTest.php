@@ -45,6 +45,7 @@ class CaldrenTest extends TestCase
             $this->get($url)
                 ->assertOk()
                 ->assertSee('footer-contact-band', false)
+                ->assertSee('https://embed.tawk.to/6ad5af224bf5ff34c946e7a0/1k59b88is', false)
                 ->assertSee('Have an energy question? Let’s bring it into focus.')
                 ->assertSee('Talk with the Caldren team')
                 ->assertSee(asset('images/caldren-building-dusk.webp'), false)
@@ -475,7 +476,7 @@ class CaldrenTest extends TestCase
     {
         [$user,$organization] = $this->workspace();
         $building = $organization->buildings()->create(['name' => 'Riverside Plaza', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15]);
-        $this->actingAs($user)->get(route('dashboard'))->assertOk()->assertSee('Riverside Plaza')->assertDontSee('site-footer');
+        $this->actingAs($user)->get(route('dashboard'))->assertOk()->assertSee('Riverside Plaza')->assertDontSee('site-footer')->assertDontSee('embed.tawk.to');
         $this->actingAs($user)->get(route('buildings.index'))->assertOk()->assertSee('Find a building');
         foreach ([['2026-08-01', '2026-08-31', 1000, 160], ['2026-09-01', '2026-09-30', 1200, 190]] as [$start,$end,$kwh,$amount]) {
             $this->actingAs($user)->post(route('buildings.bills', $building), ['period_start' => $start, 'period_end' => $end, 'kwh' => $kwh, 'amount' => $amount])->assertRedirect();
