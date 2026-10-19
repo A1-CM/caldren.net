@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/dashboard/buildings/{building}/bills', [CaldrenController::class, 'bill'])->name('buildings.bills');
     Route::post('/dashboard/buildings/{building}/forecast', [CaldrenController::class, 'forecast'])->middleware('throttle:5,1')->name('buildings.forecast');
     Route::get('/dashboard/team', [CaldrenController::class, 'team'])->name('team');
+    Route::post('/dashboard/team/model-training-consent', [CaldrenController::class, 'updateModelTrainingConsent'])->name('team.model-training-consent');
     Route::post('/dashboard/team/invitations', [CaldrenController::class, 'invite'])->middleware('throttle:10,1')->name('team.invite');
     Route::get('/dashboard/billing', [CaldrenController::class, 'billing'])->name('billing');
     Route::post('/dashboard/billing/demo-checkout', [CaldrenController::class, 'demoCheckout'])->middleware('throttle:5,1')->name('billing.demo');

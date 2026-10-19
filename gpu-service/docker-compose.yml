@@ -1,0 +1,53 @@
+services:
+  triton:
+    image: nvcr.io/nvidia/tritonserver:26.09-py3
+    command: ["tritonserver", "--model-repository=/models", "--strict-model-config=true"]
+    volumes:
+      - ./model_repository:/models:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    shm_size: 1gb
+    restart: unless-stopped
+
+  forecast-api:
+    build:
+      context: ./api
+    environment:
+      CALDREN_GPU_API_TOKEN: ${CALDREN_GPU_API_TOKEN:?Set a strong API token}
+      CALDREN_GPU_MODEL_VERSION: ${CALDREN_GPU_MODEL_VERSION:?Set a validated model version}
+      TRITON_URL: http://triton:8000
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - triton
+    restart: unless-stopped
+
+  trainer:
+    build:
+      context: ./trainer
+    profiles: [training]
+    command:
+      - --input
+      - /input/forecast-training.csv
+      - --version
+      - ${CALDREN_GPU_MODEL_VERSION:?Set a new candidate version}
+      - --model-repository
+      - /output/candidate-model-repository
+      - --metrics
+      - /output/evaluation.json
+    volumes:
+      - ./training-data:/input:ro
+      - ./candidate-artifacts:/output
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    shm_size: 1gb

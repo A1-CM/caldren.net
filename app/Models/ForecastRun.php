@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ForecastRun extends Model
 {
-    protected $fillable = ['building_id', 'status', 'model', 'input_started_at', 'input_ended_at', 'baseline_daily_kwh', 'historical_peak_kw', 'failure_reason'];
+    protected $fillable = ['building_id', 'status', 'model', 'source', 'model_version', 'input_started_at', 'input_ended_at', 'baseline_daily_kwh', 'historical_peak_kw', 'failure_reason'];
 
     protected function casts(): array
     {

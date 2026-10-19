@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Mail\ContactInquiry;
 use App\Models\Building;
+use App\Models\ForecastModelRelease;
 use App\Models\Invitation;
+use App\Models\ModelTrainingConsentEvent;
 use App\Services\ForecastService;
 use App\Services\OrganizationContext;
 use App\Services\TurnstileVerifier;
@@ -205,7 +207,66 @@ class CaldrenController extends Controller
         $isOwner = $organization->users()->where('users.id', $request->user()->id)->wherePivot('role', 'owner')->exists();
         $invitations = Invitation::where('organization_id', $organization->id)->whereNull('accepted_at')->where('expires_at', '>', now())->get();
 
-        return view('dashboard.team', compact('organization', 'members', 'invitations', 'isOwner'));
+        $modelTrainingOptedIn = $organization->hasOptedIntoModelTraining();
+
+        return view('dashboard.team', compact('organization', 'members', 'invitations', 'isOwner', 'modelTrainingOptedIn'));
+    }
+
+    public function updateModelTrainingConsent(Request $request): RedirectResponse
+    {
+        $organization = $this->organization($request);
+        abort_unless($organization->users()->where('users.id', $request->user()->id)->wherePivot('role', 'owner')->exists(), 403);
+
+        $enabled = $request->boolean('enabled');
+        if ($enabled) {
+            $request->validate(['consent' => 'required|accepted']);
+        }
+
+        $consentVersion = (string) config('services.nvidia.training_consent_version', 'v1');
+        DB::transaction(function () use ($organization, $request, $enabled, $consentVersion): void {
+            $lockedOrganization = $organization->newQuery()->lockForUpdate()->findOrFail($organization->id);
+            if ($enabled === $lockedOrganization->hasOptedIntoModelTraining()) {
+                return;
+            }
+
+            if ($enabled) {
+                $lockedOrganization->update([
+                    'model_training_opt_in_at' => now(),
+                    'model_training_consent_version' => $consentVersion,
+                    'model_training_consented_by' => $request->user()->id,
+                ]);
+                ModelTrainingConsentEvent::create([
+                    'organization_id' => $lockedOrganization->id,
+                    'user_id' => $request->user()->id,
+                    'status' => 'opted_in',
+                    'consent_version' => $consentVersion,
+                ]);
+
+                return;
+            }
+
+            ModelTrainingConsentEvent::create([
+                'organization_id' => $lockedOrganization->id,
+                'user_id' => $request->user()->id,
+                'status' => 'withdrawn',
+                'consent_version' => $lockedOrganization->model_training_consent_version ?? $consentVersion,
+            ]);
+            $lockedOrganization->update([
+                'model_training_opt_in_at' => null,
+                'model_training_consented_by' => null,
+            ]);
+
+            foreach (ForecastModelRelease::query()->where('status', 'active')->lockForUpdate()->get() as $release) {
+                $trainingOrganizationIds = array_map('intval', $release->training_organization_ids ?? []);
+                if (in_array($lockedOrganization->id, $trainingOrganizationIds, true)) {
+                    $release->update(['status' => 'withdrawn']);
+                }
+            }
+        });
+
+        return back()->with('success', $enabled
+            ? 'This workspace is opted in to model training.'
+            : 'Consent withdrawn. Caldren will use the OpenAI fallback until an eligible GPU model is activated.');
     }
 
     public function invite(Request $request)

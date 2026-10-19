@@ -9,11 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Organization extends Model
 {
-    protected $fillable = ['name', 'trial_ends_at'];
+    protected $fillable = ['name', 'trial_ends_at', 'model_training_opt_in_at', 'model_training_consent_version', 'model_training_consented_by'];
 
     protected function casts(): array
     {
-        return ['trial_ends_at' => 'datetime'];
+        return ['trial_ends_at' => 'datetime', 'model_training_opt_in_at' => 'datetime'];
     }
 
     public function users(): BelongsToMany
@@ -29,6 +29,11 @@ class Organization extends Model
     public function subscription(): HasOne
     {
         return $this->hasOne(Subscription::class);
+    }
+
+    public function hasOptedIntoModelTraining(): bool
+    {
+        return $this->model_training_opt_in_at !== null;
     }
 
     public function hasAccess(): bool

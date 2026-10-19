@@ -271,7 +271,7 @@ class CaldrenTest extends TestCase
 
         $this->get(route('product'))
             ->assertOk()
-            ->assertSee('class="button" href="'.route('register').'">Start your 30-day trial</a>', false)
+            ->assertSee('class="button" href="'.route('register').'">Start a 30-day Site trial</a>', false)
             ->assertSee('class="obs-outline-button" href="'.route('login').'">Sign in</a>', false);
     }
 
@@ -323,11 +323,19 @@ class CaldrenTest extends TestCase
             ->assertDontSee('$249')
             ->assertSee('no card details are stored');
 
-        $this->get(route('product'))
-            ->assertSee('AI ENERGY FORECASTING &amp; OPTIMIZATION INSIGHTS', false)
-            ->assertSee('Forecast demand.')
-            ->assertSee('Find where to optimize.')
-            ->assertSee('Caldren does not guarantee savings or control equipment.');
+        $product = $this->get(route('product'))
+            ->assertSee('AI ENERGY FORECASTING &amp; OPTIMIZATION', false)
+            ->assertSee('Caldren Pulse')
+            ->assertSee('BETA PRODUCT')
+            ->assertSee('seven-day demand')
+            ->assertSee('The current forecast starts with a bounded energy summary.')
+            ->assertSee('CUDA + RAPIDS / cuML')
+            ->assertSee('Triton inference behind the gateway')
+            ->assertSee('Training contribution is optional and off by default.')
+            ->assertSee('Omniverse is a possible digital-twin direction.')
+            ->assertSee('No 3D or BIM import');
+        preg_match('/<main id="main-content"[^>]*>(.*?)<\/main>/s', $product->getContent(), $productMain);
+        $this->assertSame(1, substr_count($productMain[1] ?? '', '<img '));
     }
 
     public function test_previous_marketing_urls_redirect_to_home_sections(): void

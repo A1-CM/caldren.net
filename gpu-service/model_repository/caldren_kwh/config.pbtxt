@@ -1,0 +1,7 @@
+backend: "fil"
+max_batch_size: 64
+input [{ name: "input__0" data_type: TYPE_FP32 dims: [30] }]
+output [{ name: "output__0" data_type: TYPE_FP32 dims: [1] }]
+instance_group [{ kind: KIND_AUTO }]
+parameters [{ key: "model_type" value: { string_value: "treelite_checkpoint" } }]
+parameters [{ key: "is_classifier" value: { string_value: "false" } }]

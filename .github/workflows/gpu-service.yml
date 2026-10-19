@@ -1,0 +1,23 @@
+name: GPU forecast service checks
+on:
+  pull_request:
+    paths:
+      - 'gpu-service/**'
+      - '.github/workflows/gpu-service.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'gpu-service/**'
+      - '.github/workflows/gpu-service.yml'
+jobs:
+  api-contract:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: gpu-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r gpu-service/api/requirements.txt
+      - run: python -m unittest discover -s gpu-service/tests -v

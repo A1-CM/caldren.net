@@ -6,6 +6,14 @@ return [
         'model' => env('OPENAI_MODEL', 'gpt-5.6-terra'),
     ],
 
+    'nvidia' => [
+        'forecast_url' => env('NVIDIA_FORECAST_URL'),
+        'api_token' => env('NVIDIA_FORECAST_API_TOKEN'),
+        'model_version' => env('NVIDIA_FORECAST_MODEL_VERSION'),
+        'request_timeout' => (int) env('NVIDIA_FORECAST_TIMEOUT', 8),
+        'training_consent_version' => env('MODEL_TRAINING_CONSENT_VERSION', 'v1'),
+    ],
+
     'turnstile' => [
         'site_key' => env('TURNSTILE_SITE_KEY'),
         'secret_key' => env('TURNSTILE_SECRET_KEY'),
