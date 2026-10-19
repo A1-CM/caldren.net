@@ -38,14 +38,35 @@ class CaldrenTest extends TestCase
     {
         $this->get(route('home'))
             ->assertSee('Sample statements for design preview only. These are not real customer testimonials.')
-            ->assertSee('A single view of readings and bills would make our weekly energy review easier to prepare.')
-            ->assertSee('Seeing the baseline beside an estimate would help our team ask better questions about a possible peak.')
-            ->assertSee('I want to compare buildings without losing the details that explain each site’s energy pattern.')
-            ->assertSee('Clear opportunities would give our facilities and finance teams a practical place to start a conversation.')
+            ->assertSee('A clear view of utility bills and interval readings would help our energy team prepare for the week.')
+            ->assertSee('Putting a demand outlook beside its historical baseline would give us a better starting point for review.')
+            ->assertSee('Comparing demand patterns across sites would help us see where our team should look closer.')
+            ->assertSee('Tariff-aware opportunities could help our operations and finance teams decide what to investigate next.')
             ->assertSee('data-testimonial-carousel', false)
             ->assertSee('data-testimonial-select="0"', false)
             ->assertSee('data-testimonial-next', false)
             ->assertSee('Previous testimonial');
+    }
+
+    public function test_marketing_copy_positions_caldren_around_energy_forecasting_and_optimization(): void
+    {
+        $this->get(route('home'))
+            ->assertSee('AI ENERGY INTELLIGENCE FOR BUILDINGS')
+            ->assertSee('See tomorrow’s energy demand.')
+            ->assertSee('Make better decisions today.')
+            ->assertSee('ENERGY SIGNALS TO DECISIONS')
+            ->assertSee('Where is there an opportunity to review?')
+            ->assertSee('Caldren supports optimization decisions; your team remains in control.')
+            ->assertSee('USD 49/month')
+            ->assertSee('USD 99/month')
+            ->assertSee('USD 249/month')
+            ->assertSee('no card details are stored');
+
+        $this->get(route('product'))
+            ->assertSee('AI ENERGY FORECASTING &amp; OPTIMIZATION INSIGHTS', false)
+            ->assertSee('Forecast demand.')
+            ->assertSee('Find where to optimize.')
+            ->assertSee('Caldren does not guarantee savings or control equipment.');
     }
 
     public function test_previous_marketing_urls_redirect_to_home_sections(): void

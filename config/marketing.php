@@ -4,25 +4,25 @@ return [
     'testimonials_are_samples' => true,
     'testimonials' => [
         [
-            'quote' => 'A single view of readings and bills would make our weekly energy review easier to prepare.',
+            'quote' => 'A clear view of utility bills and interval readings would help our energy team prepare for the week.',
             'name' => 'Sample profile 01',
-            'role' => 'Facilities manager',
+            'role' => 'Energy manager',
             'organization' => 'Illustrative portfolio',
         ],
         [
-            'quote' => 'Seeing the baseline beside an estimate would help our team ask better questions about a possible peak.',
+            'quote' => 'Putting a demand outlook beside its historical baseline would give us a better starting point for review.',
             'name' => 'Sample profile 02',
             'role' => 'Energy analyst',
             'organization' => 'Illustrative portfolio',
         ],
         [
-            'quote' => 'I want to compare buildings without losing the details that explain each site’s energy pattern.',
+            'quote' => 'Comparing demand patterns across sites would help us see where our team should look closer.',
             'name' => 'Sample profile 03',
-            'role' => 'Property manager',
+            'role' => 'Facilities manager',
             'organization' => 'Illustrative portfolio',
         ],
         [
-            'quote' => 'Clear opportunities would give our facilities and finance teams a practical place to start a conversation.',
+            'quote' => 'Tariff-aware opportunities could help our operations and finance teams decide what to investigate next.',
             'name' => 'Sample profile 04',
             'role' => 'Operations director',
             'organization' => 'Illustrative portfolio',

@@ -5,14 +5,14 @@
     <div class="obs-testimonials-shade" aria-hidden="true"></div>
     <div class="container obs-testimonials-inner">
         <header class="obs-testimonials-heading">
-            <span class="obs-testimonials-kicker">FIELD NOTES / 0{{ count($testimonials) }}</span>
+            <span class="obs-testimonials-kicker">ENERGY TEAM PERSPECTIVES / 0{{ count($testimonials) }}</span>
             <span class="eyebrow">{{ config('marketing.testimonials_are_samples') ? 'ILLUSTRATIVE TESTIMONIALS' : 'CUSTOMER PERSPECTIVES' }}</span>
-            <h2 id="testimonials-title">A space for building teams’ perspectives.</h2>
+            <h2 id="testimonials-title">A clearer outlook for energy decisions.</h2>
             @if(config('marketing.testimonials_are_samples'))
                 <p class="obs-sample-note">Sample statements for design preview only. These are not real customer testimonials.</p>
             @endif
         </header>
-        <div class="obs-quote-observatory" data-testimonial-carousel role="region" aria-roledescription="carousel" aria-label="Building team perspectives">
+        <div class="obs-quote-observatory" data-testimonial-carousel role="region" aria-roledescription="carousel" aria-label="Energy team perspectives">
             <div class="obs-quote-stage" id="testimonial-quote-stage" aria-live="polite" aria-atomic="true">
                 @foreach($testimonials as $index => $testimonial)
                     <figure class="obs-quote-slide" data-testimonial-slide data-index="{{ $index }}" role="group" aria-roledescription="slide" aria-label="{{ $index + 1 }} of {{ count($testimonials) }}">
