@@ -44,6 +44,11 @@ class CaldrenTest extends TestCase
             ->setRaw(['sub' => $id, 'email' => $email, 'email_verified' => true, 'name' => $name]);
     }
 
+    private function groqResponse(array $data): array
+    {
+        return ['choices' => [['message' => ['content' => json_encode($data, JSON_THROW_ON_ERROR)]]]];
+    }
+
     private function workspace(): array
     {
         $user = User::factory()->create();
@@ -266,7 +271,7 @@ class CaldrenTest extends TestCase
             ->assertSee('href="'.route('home').'#about"', false)
             ->assertSee('class="console-trial-link" href="'.route('product').'"', false)
             ->assertDontSee('console-signin-link', false)
-            ->assertSee('class="button" href="'.route('product').'">Explore the product</a>', false)
+            ->assertSee('class="button" href="'.route('product').'">Explore Caldren Pulse</a>', false)
             ->assertSee('class="obs-outline-button" href="'.route('register').'">Start Site trial</a>', false);
 
         $this->get(route('product'))
@@ -325,6 +330,8 @@ class CaldrenTest extends TestCase
 
         $product = $this->get(route('product'))
             ->assertSee('AI ENERGY FORECASTING &amp; OPTIMIZATION', false)
+            ->assertSee('Groq Chat Completions')
+            ->assertDontSee('OpenAI')
             ->assertSee('Caldren Pulse')
             ->assertSee('BETA PRODUCT')
             ->assertSee('seven-day demand')
@@ -696,7 +703,8 @@ class CaldrenTest extends TestCase
 
     public function test_forecast_is_saved_only_when_valid(): void
     {
-        config()->set('services.openai.key', 'test-key');
+        config()->set('services.groq.key', 'test-key');
+        config()->set('services.groq.model', 'openai/gpt-oss-120b');
         [$user,$organization] = $this->workspace();
         $building = $organization->buildings()->create(['name' => 'Tower A', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15]);
         $first = CarbonImmutable::now('UTC')->subDays(14)->startOfDay();
@@ -710,10 +718,18 @@ class CaldrenTest extends TestCase
         for ($i = 1; $i <= 7; $i++) {
             $days[] = ['date' => $last->copy()->addDays($i)->toDateString(), 'kwh' => 126, 'peak_kw' => 6];
         }
-        Http::fake(['api.openai.com/*' => Http::response(['output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['days' => $days, 'recommendations' => [['title' => 'Review peak loads', 'description' => 'Check flexible loads in peak hours.', 'priority' => 'medium']]])]]]]], 200)]);
+        Http::preventStrayRequests();
+        Http::fake(['api.groq.com/openai/v1/chat/completions' => Http::response($this->groqResponse(['days' => $days, 'recommendations' => [['title' => 'Review peak loads', 'description' => 'Check flexible loads in peak hours.', 'priority' => 'medium']]]), 200)]);
         $this->actingAs($user)->post(route('buildings.forecast', $building))->assertRedirect();
-        $this->assertDatabaseHas('forecast_runs', ['building_id' => $building->id, 'status' => 'complete']);
+        $this->assertDatabaseHas('forecast_runs', ['building_id' => $building->id, 'status' => 'complete', 'source' => 'groq', 'model' => 'openai/gpt-oss-120b']);
         $this->assertDatabaseCount('forecast_points', 7);
+        Http::assertSent(fn ($request): bool => $request->url() === 'https://api.groq.com/openai/v1/chat/completions'
+            && $request->hasHeader('Authorization', 'Bearer test-key')
+            && $request['model'] === 'openai/gpt-oss-120b'
+            && $request['response_format']['type'] === 'json_object'
+            && count(json_decode($request['messages'][1]['content'], true)['historical_days']) === 14
+            && array_key_exists('peak_hours', json_decode($request['messages'][1]['content'], true))
+            && ! array_key_exists('organization_id', json_decode($request['messages'][1]['content'], true)));
     }
 
     public function test_dashboard_and_bill_only_building_show_spending_trend(): void
@@ -813,7 +829,8 @@ class CaldrenTest extends TestCase
 
     public function test_sparse_readings_cannot_generate_a_forecast(): void
     {
-        config()->set('services.openai.key', 'test-key');
+        config()->set('services.groq.key', 'test-key');
+        config()->set('services.groq.model', 'openai/gpt-oss-120b');
         [$user,$organization] = $this->workspace();
         $building = $organization->buildings()->create(['name' => 'Tower A', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15]);
         for ($i = 1; $i <= 14; $i++) {
@@ -823,9 +840,32 @@ class CaldrenTest extends TestCase
         $this->assertDatabaseCount('forecast_runs', 0);
     }
 
+    public function test_groq_service_failure_keeps_readings_and_records_retryable_failure(): void
+    {
+        config()->set('services.groq.key', 'test-key');
+        config()->set('services.groq.model', 'openai/gpt-oss-120b');
+        [$user, $organization] = $this->workspace();
+        $building = $organization->buildings()->create(['name' => 'Tower A', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15]);
+        $first = CarbonImmutable::now('UTC')->subDays(14)->startOfDay();
+        for ($day = 0; $day < 14; $day++) {
+            for ($hour = 0; $hour < 24; $hour++) {
+                $building->readings()->create(['recorded_at' => $first->addDays($day)->addHours($hour), 'kwh' => 5]);
+            }
+        }
+        Http::preventStrayRequests();
+        Http::fake(['api.groq.com/openai/v1/chat/completions' => Http::response(['error' => ['message' => 'temporarily unavailable']], 503)]);
+
+        $this->actingAs($user)->post(route('buildings.forecast', $building))->assertSessionHas('error');
+
+        $this->assertDatabaseHas('forecast_runs', ['building_id' => $building->id, 'status' => 'failed', 'source' => 'groq']);
+        $this->assertSame(14 * 24, $building->readings()->count());
+        $this->assertDatabaseCount('forecast_points', 0);
+    }
+
     public function test_invalid_ai_numbers_are_not_published(): void
     {
-        config()->set('services.openai.key', 'test-key');
+        config()->set('services.groq.key', 'test-key');
+        config()->set('services.groq.model', 'openai/gpt-oss-120b');
         [$user,$organization] = $this->workspace();
         $building = $organization->buildings()->create(['name' => 'Tower A', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15]);
         $first = CarbonImmutable::now('UTC')->subDays(14)->startOfDay();
@@ -838,7 +878,8 @@ class CaldrenTest extends TestCase
         for ($i = 1; $i <= 7; $i++) {
             $days[] = ['date' => $first->addDays(13 + $i)->toDateString(), 'kwh' => 999999, 'peak_kw' => 6];
         }
-        Http::fake(['api.openai.com/*' => Http::response(['output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['days' => $days, 'recommendations' => []])]]]]], 200)]);
+        Http::preventStrayRequests();
+        Http::fake(['api.groq.com/openai/v1/chat/completions' => Http::response($this->groqResponse(['days' => $days, 'recommendations' => []]), 200)]);
         $this->actingAs($user)->post(route('buildings.forecast', $building))->assertSessionHas('error');
         $this->assertDatabaseHas('forecast_runs', ['building_id' => $building->id, 'status' => 'failed']);
         $this->assertDatabaseCount('forecast_points', 0);

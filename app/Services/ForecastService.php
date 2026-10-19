@@ -3,21 +3,16 @@
 namespace App\Services;
 
 use App\Models\Building;
-use App\Models\ForecastModelRelease;
 use App\Models\ForecastRun;
 use App\Models\UsageReading;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
 class ForecastService
 {
-    public function __construct(
-        private readonly GpuForecastClient $gpuClient,
-        private readonly OpenAIForecastClient $openAIClient,
-    ) {}
+    public function __construct(private readonly GroqForecastClient $groqClient) {}
 
     public function generate(Building $building): ForecastRun
     {
@@ -53,11 +48,10 @@ class ForecastService
             $dailyHistory[] = ['date' => $date, 'kwh' => $day['kwh'], 'peak_kw' => $day['peak_kw']];
         }
         $context = $this->forecastContext($building, $dailyHistory, $interval, $baseline, $historicalPeak);
-        $activeModel = ForecastModelRelease::query()->where('status', 'active')->latest('activated_at')->first();
         $run = $building->forecasts()->create([
             'status' => 'pending',
-            'model' => config('services.openai.model'),
-            'source' => 'openai',
+            'model' => config('services.groq.model'),
+            'source' => 'groq',
             'input_started_at' => $firstDay->toDateString(),
             'input_ended_at' => $yesterday->toDateString(),
             'baseline_daily_kwh' => $baseline,
@@ -65,27 +59,13 @@ class ForecastService
         ]);
 
         try {
-            $gpuDays = $this->requestGpuForecast($activeModel, $context, $yesterday, $baseline, $historicalPeak);
-            if ($gpuDays !== null) {
-                $source = 'nvidia_triton';
-                $modelVersion = $activeModel->version;
-                $model = 'cuml-random-forest';
-                try {
-                    $recommendations = $this->openAIClient->recommendations($context, $gpuDays);
-                } catch (\Throwable $error) {
-                    Log::warning('OpenAI recommendations were unavailable for a valid GPU forecast.', ['forecast_run_id' => $run->id, 'error' => $error->getMessage()]);
-                    $recommendations = [];
-                }
-                $days = $gpuDays;
-            } else {
-                $data = $this->openAIClient->fullForecast($context);
-                $days = $data['days'];
-                $recommendations = $data['recommendations'];
-                $source = $activeModel === null ? 'openai' : 'openai_fallback';
-                $modelVersion = null;
-                $model = (string) config('services.openai.model');
-                $this->validateForecastDays($days, $yesterday, $baseline, $historicalPeak);
-            }
+            $data = $this->groqClient->fullForecast($context);
+            $days = $data['days'];
+            $recommendations = $data['recommendations'];
+            $source = 'groq';
+            $modelVersion = null;
+            $model = (string) config('services.groq.model');
+            $this->validateForecastDays($days, $yesterday, $baseline, $historicalPeak);
 
             if (count($days) !== 7 || count($recommendations) > 3) {
                 throw new RuntimeException('The forecast response did not contain the required seven days or exceeded the recommendation limit.');
@@ -170,42 +150,6 @@ class ForecastService
             'peak_rate' => $building->peak_rate,
             'peak_hours' => [$building->peak_start_hour, $building->peak_end_hour],
         ];
-    }
-
-    /**
-     * @param  array<string, mixed>  $context
-     * @return array<int, array<string, mixed>>|null
-     */
-    private function requestGpuForecast(?ForecastModelRelease $release, array $context, CarbonImmutable $lastInputDay, float $baseline, float $historicalPeak): ?array
-    {
-        if ($release === null) {
-            return null;
-        }
-
-        try {
-            $gpuContext = [
-                'building_timezone' => $context['building_timezone'],
-                'interval_minutes' => $context['interval_minutes'],
-                'historical_days' => $context['historical_days'],
-                'baseline_daily_kwh' => $context['baseline_daily_kwh'],
-                'historical_peak_kw' => $context['historical_peak_kw'],
-                'energy_rate' => null,
-                'peak_rate' => null,
-                'peak_hours' => [null, null],
-            ];
-            $response = $this->gpuClient->forecast($gpuContext, $release->version);
-            if ($response['model_version'] !== $release->version) {
-                throw new RuntimeException('The NVIDIA forecast model version did not match the active release.');
-            }
-            $days = $response['days'];
-            $this->validateForecastDays($days, $lastInputDay, $baseline, $historicalPeak);
-
-            return $days;
-        } catch (\Throwable $error) {
-            Log::warning('NVIDIA forecast inference failed; using the OpenAI fallback.', ['model_version' => $release->version, 'error' => $error->getMessage()]);
-
-            return null;
-        }
     }
 
     /**

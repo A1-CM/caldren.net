@@ -19,14 +19,14 @@
                 @auth
                     <a href="{{ route('dashboard') }}"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Dashboard</a>
                 @endauth
-                <a class="console-mobile-cta" href="{{ route('product') }}" @if(request()->routeIs('product')) aria-current="page" @endif><i class="fa-solid fa-wave-square" aria-hidden="true"></i> Explore the product</a>
+                <a class="console-mobile-cta" href="{{ route('product') }}" @if(request()->routeIs('product')) aria-current="page" @endif><i class="fa-solid fa-wave-square" aria-hidden="true"></i> Explore Caldren Pulse</a>
             </div>
         </nav>
         <div class="console-header-actions">
             @auth
                 <a class="console-dashboard-link" href="{{ route('dashboard') }}"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Dashboard</a>
             @endauth
-            <a class="console-trial-link" href="{{ route('product') }}" @if(request()->routeIs('product')) aria-current="page" @endif>Explore the product <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+            <a class="console-trial-link" href="{{ route('product') }}" @if(request()->routeIs('product')) aria-current="page" @endif>Explore Caldren Pulse <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
         </div>
     </div>
     <svg class="console-waveform" viewBox="0 0 1440 20" preserveAspectRatio="none" aria-hidden="true"><path d="M0 12h245l12-5 10 10 14-13 12 8 10-4h160l10-3 12 7 12-10 13 9 12-4h260l12-6 13 12 12-15 12 10 13-4h280l12-5 12 10 14-12 12 7 12-4h240" /></svg>

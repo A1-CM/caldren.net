@@ -8,7 +8,7 @@
         <span class="obs-kicker"><span class="obs-live-dot" aria-hidden="true"></span> AI ENERGY INTELLIGENCE FOR BUILDINGS</span>
         <h1 id="home-title">See tomorrow’s energy demand. <span class="obs-glow-text">Make better decisions today.</span></h1>
         <p>Give your team a clear view of building usage, likely demand peaks, and opportunities worth reviewing. Start with the data you already have.</p>
-        <div class="hero-centered-actions"><a class="button" href="{{ route('product') }}">Explore the product</a><a class="obs-outline-button" href="{{ route('register') }}">Start Site trial</a></div>
+        <div class="hero-centered-actions"><a class="button" href="{{ route('product') }}">Explore Caldren Pulse</a><a class="obs-outline-button" href="{{ route('register') }}">Start Site trial</a></div>
         <div class="hero-data-notes"><span><i class="fa-solid fa-credit-card" aria-hidden="true"></i> No card required</span><span><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Bills or interval readings</span><span><i class="fa-solid fa-user-check" aria-hidden="true"></i> Your team reviews estimates</span></div>
     </div>
     <a class="hero-scroll-cue" href="#story"><span>SCROLL TO SEE HOW IT CONNECTS</span><i class="fa-solid fa-arrow-down" aria-hidden="true"></i></a>

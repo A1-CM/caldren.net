@@ -266,7 +266,7 @@ class CaldrenController extends Controller
 
         return back()->with('success', $enabled
             ? 'This workspace is opted in to model training.'
-            : 'Consent withdrawn. Caldren will use the OpenAI fallback until an eligible GPU model is activated.');
+            : 'Consent withdrawn. Caldren will continue using Groq forecasts while the GPU model path is unavailable.');
     }
 
     public function invite(Request $request)

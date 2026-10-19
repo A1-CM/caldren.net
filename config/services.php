@@ -1,9 +1,10 @@
 <?php
 
 return [
-    'openai' => [
-        'key' => env('OPENAI_API_KEY'),
-        'model' => env('OPENAI_MODEL', 'gpt-5.6-terra'),
+    'groq' => [
+        'key' => env('GROQ_API_KEY'),
+        'model' => env('GROQ_MODEL', 'openai/gpt-oss-120b'),
+        'timeout' => (int) env('GROQ_TIMEOUT', 35),
     ],
 
     'nvidia' => [
