@@ -1,30 +1,21 @@
 @extends('layouts.site')
 @section('content')
-<section class="observatory-hero" aria-labelledby="home-title">
+<section class="observatory-hero observatory-hero-parallax" aria-labelledby="home-title" data-scroll-parallax>
+    <div class="hero-photo-layer" data-parallax-speed="0.16" style="background-image:url('{{ asset('images/caldren-building-dusk.webp') }}')" aria-hidden="true"></div>
+    <div class="hero-photo-shade" aria-hidden="true"></div>
     <div class="obs-grid" aria-hidden="true"></div>
-    <div class="obs-orb obs-orb-one" aria-hidden="true"></div>
-    <div class="obs-orb obs-orb-two" aria-hidden="true"></div>
-    <div class="container relative z-10 grid items-center gap-12 pb-24 pt-44 lg:grid-cols-[.9fr_1.1fr] lg:gap-8 lg:pb-32 lg:pt-48">
-        <div class="max-w-2xl">
-            <span class="obs-kicker"><span class="obs-live-dot" aria-hidden="true"></span> AI ENERGY INTELLIGENCE FOR BUILDINGS</span>
-            <h1 id="home-title" class="mt-7 text-5xl leading-[1.06] font-bold tracking-[-.06em] text-white sm:text-6xl xl:text-[4.8rem]">See tomorrow’s energy demand. <span class="obs-glow-text">Make better decisions today.</span></h1>
-            <p class="mt-7 max-w-xl text-lg leading-8 text-[#c4d9d7]">Give your team a clear view of building usage, likely demand peaks, and opportunities worth reviewing. Start with the data you already have.</p>
-            <div class="mt-9 flex flex-wrap gap-3"><a class="button" href="{{ route('register') }}">Start your 30-day trial</a><a class="obs-outline-button" href="{{ route('product') }}">Explore the product</a></div>
-            <p class="mt-5 text-xs text-[#a8c4c1]">No card required · Built for commercial building teams</p>
-        </div>
-        <div class="obs-scene" aria-label="Illustrative Caldren dashboard preview">
-            <div class="obs-orbit obs-orbit-one" aria-hidden="true"></div><div class="obs-orbit obs-orbit-two" aria-hidden="true"></div>
-            <div class="obs-main-panel observatory-glass">
-                <div class="obs-panel-top"><span><i class="fa-solid fa-wave-square" aria-hidden="true"></i> Portfolio outlook</span><span>EXAMPLE / NEXT 7 DAYS</span></div>
-                <div class="obs-summary"><div><small>Estimated energy</small><strong>38.4 <span>MWh</span></strong><small>Illustrative figure</small></div><div><small>Peak window to review</small><strong>14:00 <span>– 17:00</span></strong><small>Tuesday · example building</small></div></div>
-                <div class="obs-chart-surface"><div class="flex items-center justify-between gap-3"><strong>Demand pattern</strong><span>History <i class="obs-legend-dot" aria-hidden="true"></i> Estimate</span></div><svg viewBox="0 0 540 192" role="img" aria-labelledby="hero-chart-title hero-chart-desc" preserveAspectRatio="none"><title id="hero-chart-title">Illustrative demand pattern</title><desc id="hero-chart-desc">An example chart showing a rising demand estimate during an afternoon peak window.</desc><defs><linearGradient id="hero-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#32D9B5" stop-opacity=".35"/><stop offset="1" stop-color="#32D9B5" stop-opacity="0"/></linearGradient></defs><path class="obs-chart-gridline" d="M0 42H540 M0 94H540 M0 146H540"/><path d="M0 138 C32 130 42 105 78 115 S131 153 163 131 S208 77 244 99 S299 136 328 102 S377 47 409 68 S460 100 487 45 S520 38 540 53 V192 H0Z" fill="url(#hero-fill)"/><path d="M0 138 C32 130 42 105 78 115 S131 153 163 131 S208 77 244 99 S299 136 328 102" fill="none" stroke="#8CA9AA" stroke-width="3" stroke-linecap="round"/><path d="M328 102 C355 65 377 47 409 68 S460 100 487 45 S520 38 540 53" fill="none" stroke="#36D6B5" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 5"/><circle cx="487" cy="45" r="6" fill="#E5A64A" stroke="#153640" stroke-width="3"/></svg><div class="obs-chart-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div></div>
-                <div class="obs-insight"><i class="fa-solid fa-lightbulb" aria-hidden="true"></i><div><strong>Opportunity to review</strong><span>Consider flexible loads outside the expected peak.</span></div></div>
-            </div>
-            <div class="obs-float-card obs-float-left observatory-glass"><i class="fa-solid fa-bolt" aria-hidden="true"></i><span><small>POSSIBLE PEAK</small><strong>Tuesday afternoon</strong></span></div>
-            <div class="obs-float-card obs-float-right observatory-glass"><i class="fa-solid fa-building" aria-hidden="true"></i><span><small>PORTFOLIO VIEW</small><strong>Every building, one place</strong></span></div>
-            <p class="obs-example-note">Illustrative dashboard · example values are not forecasts</p>
-        </div>
+    <div class="hero-energy-path" data-parallax-speed="0.3" aria-hidden="true">
+        <svg viewBox="0 0 1440 500" preserveAspectRatio="none"><path d="M0 260h250l48-8 22 14 30-43 30 32 34-7h220l35-8 28 19 30-33 31 28 34-6h240l43-18 27 31 33-47 35 33 32-8h268"/><circle cx="458" cy="255" r="5"/><circle cx="812" cy="252" r="5"/><circle cx="1200" cy="242" r="5"/></svg>
     </div>
+    <div class="hero-copy-centered">
+        <span class="obs-kicker"><span class="obs-live-dot" aria-hidden="true"></span> AI ENERGY INTELLIGENCE FOR BUILDINGS</span>
+        <h1 id="home-title">See tomorrow’s energy demand. <span class="obs-glow-text">Make better decisions today.</span></h1>
+        <p>Give your team a clear view of building usage, likely demand peaks, and opportunities worth reviewing. Start with the data you already have.</p>
+        <div class="hero-centered-actions"><a class="button" href="{{ route('register') }}">Start your 30-day trial</a><a class="obs-outline-button" href="{{ route('product') }}">Explore the product</a></div>
+        <div class="hero-data-notes"><span><i class="fa-solid fa-credit-card" aria-hidden="true"></i> No card required</span><span><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Bills or interval readings</span><span><i class="fa-solid fa-user-check" aria-hidden="true"></i> Your team reviews estimates</span></div>
+    </div>
+
+    <a class="hero-scroll-cue" href="#questions-title"><span>SCROLL TO SEE HOW IT CONNECTS</span><i class="fa-solid fa-arrow-down" aria-hidden="true"></i></a>
 </section>
 
 <section class="container obs-section" aria-labelledby="questions-title"><div class="obs-section-heading"><span class="eyebrow">THE QUESTIONS BEHIND BETTER DECISIONS</span><h2 id="questions-title">Turn energy data into a clearer conversation.</h2><p>Find the context your team needs before the next planning meeting.</p></div><div class="obs-question-grid"><article class="obs-question-card"><div class="obs-question-art obs-usage-art" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><span class="obs-card-index">01 / UNDERSTAND</span><h3>What are we using?</h3><p>See consumption history and monthly bills for each building, then step back to view the portfolio.</p></article><article class="obs-question-card"><div class="obs-question-art obs-peak-art" aria-hidden="true"><span class="obs-peak-line"></span><span class="obs-peak-marker"><i class="fa-solid fa-bolt"></i></span></div><span class="obs-card-index">02 / ANTICIPATE</span><h3>What might peak?</h3><p>Review seven-day energy and peak estimates with their source period and historical baseline.</p></article><article class="obs-question-card"><div class="obs-question-art obs-action-art" aria-hidden="true"><span><i class="fa-solid fa-lightbulb"></i> Review peak hours</span><span><i class="fa-solid fa-check"></i> Discuss flexible loads</span></div><span class="obs-card-index">03 / IMPROVE</span><h3>What can we change?</h3><p>Bring tariff-aware opportunities to the people who know how your buildings operate.</p></article></div></section>

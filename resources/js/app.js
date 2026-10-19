@@ -45,6 +45,53 @@ window.addEventListener('resize', () => {
     closeMenu();
   }
 });
+
+const parallaxHero = document.querySelector('[data-scroll-parallax]');
+const parallaxLayers = parallaxHero ? [...parallaxHero.querySelectorAll('[data-parallax-speed]')] : [];
+const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+let parallaxFrameQueued = false;
+
+const updateParallax = () => {
+  parallaxFrameQueued = false;
+
+  if (!parallaxHero || reducedMotionQuery.matches) {
+    return;
+  }
+
+  const heroBounds = parallaxHero.getBoundingClientRect();
+  const scrollProgress = Math.min(Math.max(-heroBounds.top, 0), heroBounds.height);
+  const screenFactor = window.innerWidth <= 760 ? 0.5 : 1;
+
+  parallaxLayers.forEach((layer) => {
+    const speed = Number(layer.dataset.parallaxSpeed || 0);
+    layer.style.setProperty('--parallax-offset', String(scrollProgress * speed * screenFactor) + 'px');
+  });
+};
+
+const requestParallaxUpdate = () => {
+  if (parallaxFrameQueued || reducedMotionQuery.matches) {
+    return;
+  }
+
+  parallaxFrameQueued = true;
+  window.requestAnimationFrame(updateParallax);
+};
+
+if (parallaxHero) {
+  if (!reducedMotionQuery.matches) {
+    window.addEventListener('scroll', requestParallaxUpdate, {passive: true});
+    window.addEventListener('resize', requestParallaxUpdate);
+    requestParallaxUpdate();
+  }
+
+  reducedMotionQuery.addEventListener('change', (event) => {
+    if (event.matches) {
+      parallaxLayers.forEach((layer) => layer.style.removeProperty('--parallax-offset'));
+    } else {
+      requestParallaxUpdate();
+    }
+  });
+}
 const usageCanvas = document.getElementById('usage-chart');
 const usageData = document.getElementById('usage-chart-data');
 if (usageCanvas && usageData) {
