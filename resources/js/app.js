@@ -58,6 +58,25 @@ if (testimonialCarousel) {
   const nextTestimonial = testimonialCarousel.querySelector('[data-testimonial-next]');
   let activeTestimonialIndex = 0;
 
+  const fitQuoteText = (slide) => {
+    const quote = slide?.querySelector('blockquote');
+    const text = quote?.querySelector('p');
+    if (!quote || !text || quote.clientHeight === 0) return;
+
+    text.style.removeProperty('--quote-font-size');
+    const baseSize = Number.parseFloat(window.getComputedStyle(text).fontSize);
+    const minimumSize = window.innerWidth <= 760 ? 17 : 19;
+    let size = baseSize;
+    text.style.setProperty('--quote-font-size', `${size}px`);
+
+    while (quote.scrollHeight > quote.clientHeight && size > minimumSize) {
+      size = Math.max(minimumSize, size - 1);
+      text.style.setProperty('--quote-font-size', `${size}px`);
+    }
+  };
+
+  const fitActiveQuoteText = () => fitQuoteText(testimonialSlides[activeTestimonialIndex]);
+
   const showTestimonial = (requestedIndex) => {
     activeTestimonialIndex = (requestedIndex + testimonialSlides.length) % testimonialSlides.length;
 
@@ -68,8 +87,11 @@ if (testimonialCarousel) {
       slide.classList.toggle('is-active', isActive);
       slide.classList.remove('is-entering');
 
-      if (isActive && !reducedMotionQuery.matches) {
-        requestAnimationFrame(() => slide.classList.add('is-entering'));
+      if (isActive) {
+        requestAnimationFrame(() => {
+          fitQuoteText(slide);
+          if (!reducedMotionQuery.matches) slide.classList.add('is-entering');
+        });
       }
     });
 
@@ -79,6 +101,7 @@ if (testimonialCarousel) {
   };
 
   testimonialCarousel.classList.add('is-enhanced');
+  window.addEventListener('resize', fitActiveQuoteText);
   testimonialSelectors.forEach((selector) => {
     selector.addEventListener('click', () => {
       showTestimonial(Number(selector.dataset.testimonialSelect));

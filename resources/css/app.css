@@ -420,10 +420,12 @@
 .obs-quote-observatory{min-width:0}
 .obs-quote-stage{position:relative;min-height:335px;padding:40px;border:1px solid #c3f1df8c;border-radius:22px;background:linear-gradient(135deg,#ffffff32,#c8fff018);box-shadow:inset 0 1px #ffffff8c,0 28px 70px #03151e66;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
 .obs-quote-slide{position:relative;margin:0;padding:14px 0 0}
+.obs-quote-observatory.is-enhanced .obs-quote-slide{display:flex;height:100%;flex-direction:column}
 .obs-quote-slide[hidden]{display:none}
 .obs-quote-index{position:absolute;top:0;right:0;color:#b5ebd7;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.1em}
 .obs-quote-slide blockquote{margin:0 0 32px}
-.obs-quote-slide blockquote p{max-width:680px;margin:0;font-size:clamp(25px,3vw,39px);font-weight:550;line-height:1.25;letter-spacing:-.035em;text-wrap:pretty}
+.obs-quote-observatory.is-enhanced .obs-quote-slide blockquote{flex:1;min-height:0;overflow:hidden;margin-bottom:24px}
+.obs-quote-slide blockquote p{max-width:680px;margin:0;font-size:var(--quote-font-size,clamp(25px,3vw,39px));font-weight:550;line-height:1.25;letter-spacing:-.035em;text-wrap:pretty}
 .obs-quote-slide figcaption{display:grid;gap:5px;padding-top:18px;border-top:1px solid #d7fff259}
 .obs-quote-slide figcaption strong{color:white;font-size:14px}
 .obs-quote-slide figcaption span{color:#c4ded5;font-size:11px}
@@ -440,13 +442,13 @@
 .obs-quote-observatory button:focus-visible{outline:3px solid #e5a64a;outline-offset:3px}
 .obs-quote-navigation{display:none}
 .obs-quote-observatory.is-enhanced .obs-quote-navigation{display:grid}
-.obs-quote-observatory.is-enhanced .obs-quote-stage{min-height:335px}
+.obs-quote-observatory.is-enhanced .obs-quote-stage{height:335px;min-height:335px;overflow:hidden}
 .obs-quote-slide.is-entering{animation:quote-arrive .34s cubic-bezier(.2,.65,.3,1) both}
 @keyframes quote-arrive{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.obs-quote-stage{background:#163d47}}
-@media(max-width:900px){.obs-testimonials-inner{grid-template-columns:.65fr 1.35fr;gap:5%}.obs-quote-stage{padding:32px;min-height:360px}.obs-quote-observatory.is-enhanced .obs-quote-stage{min-height:360px}.obs-quote-selectors{gap:6px}.obs-quote-selector-name{display:none}}
-@media(max-width:760px){.obs-testimonials{margin-block:48px;padding:0 0 45px}.obs-testimonials-image{height:350px;object-position:center 45%}.obs-testimonials-shade{background:linear-gradient(180deg,#071c2740 0,#071c27e5 39%,#0b252efa 62%)}.obs-testimonials-inner{grid-template-columns:1fr;gap:25px}.obs-testimonials-heading{max-width:640px;padding-top:270px}.obs-testimonials-kicker{margin-bottom:18px}.obs-testimonials-heading h2{font-size:38px}.obs-quote-stage,.obs-quote-observatory.is-enhanced .obs-quote-stage{min-height:310px;padding:26px 22px}.obs-quote-slide blockquote p{font-size:clamp(24px,7vw,33px)}.obs-quote-slide blockquote{margin-bottom:24px}.obs-quote-navigation{grid-template-columns:1fr auto;gap:12px}.obs-quote-selectors button{width:36px;height:36px;min-height:36px;justify-content:center;padding:0}.obs-quote-arrows button{width:39px;height:39px}}
-@media(max-width:480px){.obs-testimonials-image{height:320px}.obs-testimonials-heading{padding-top:215px}.obs-testimonials-heading h2{font-size:34px}.obs-quote-stage,.obs-quote-observatory.is-enhanced .obs-quote-stage{min-height:350px;padding:24px 19px}.obs-quote-slide blockquote p{font-size:25px}.obs-quote-slide figcaption span{font-size:10px}.obs-quote-selectors{gap:5px}}
+@media(max-width:900px){.obs-testimonials-inner{grid-template-columns:.65fr 1.35fr;gap:5%}.obs-quote-stage{padding:32px;min-height:360px}.obs-quote-observatory.is-enhanced .obs-quote-stage{height:360px;min-height:360px}.obs-quote-selectors{gap:6px}.obs-quote-selector-name{display:none}}
+@media(max-width:760px){.obs-testimonials{margin-block:48px;padding:0 0 45px}.obs-testimonials-image{height:350px;object-position:center 45%}.obs-testimonials-shade{background:linear-gradient(180deg,#071c2740 0,#071c27e5 39%,#0b252efa 62%)}.obs-testimonials-inner{grid-template-columns:1fr;gap:25px}.obs-testimonials-heading{max-width:640px;padding-top:270px}.obs-testimonials-kicker{margin-bottom:18px}.obs-testimonials-heading h2{font-size:38px}.obs-quote-stage,.obs-quote-observatory.is-enhanced .obs-quote-stage{min-height:310px;padding:26px 22px}.obs-quote-observatory.is-enhanced .obs-quote-stage{height:350px;min-height:350px}.obs-quote-slide blockquote p{font-size:var(--quote-font-size,clamp(24px,7vw,33px))}.obs-quote-slide blockquote{margin-bottom:24px}.obs-quote-navigation{grid-template-columns:1fr auto;gap:12px}.obs-quote-selectors button{width:36px;height:36px;min-height:36px;justify-content:center;padding:0}.obs-quote-arrows button{width:39px;height:39px}}
+@media(max-width:480px){.obs-testimonials-image{height:320px}.obs-testimonials-heading{padding-top:215px}.obs-testimonials-heading h2{font-size:34px}.obs-quote-stage,.obs-quote-observatory.is-enhanced .obs-quote-stage{min-height:350px;padding:24px 19px}.obs-quote-observatory.is-enhanced .obs-quote-stage{height:350px;min-height:350px}.obs-quote-slide blockquote p{font-size:var(--quote-font-size,25px)}.obs-quote-slide figcaption span{font-size:10px}.obs-quote-selectors{gap:5px}}
 @media(prefers-reduced-motion:reduce){.obs-quote-selectors button,.obs-quote-arrows button{transition:none}.obs-quote-slide.is-entering{animation:none}}
 
 
