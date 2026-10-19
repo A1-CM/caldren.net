@@ -1,27 +1,6 @@
-@extends('layouts.site')
-@section('title', 'Privacy — Caldren')
-@section('content')
-<section class="policy-hero" aria-labelledby="privacy-title">
-    <div class="policy-hero-grid" aria-hidden="true"></div>
-    <div class="policy-hero-glow" aria-hidden="true"></div>
-    <div class="container policy-hero-layout">
-        <div class="policy-hero-copy">
-            <span class="obs-kicker"><span class="obs-live-dot" aria-hidden="true"></span> PRIVACY AT CALDREN</span>
-            <h1 id="privacy-title">Know what happens to your data.</h1>
-            <p>Building energy decisions need context. Here is what Caldren stores, what is shared for a forecast, and how to reach us about your information.</p>
-            <span class="policy-updated">Last updated October 16, 2026</span>
-        </div>
-        <div class="policy-hero-panel observatory-glass">
-            <span class="policy-panel-label">AT A GLANCE</span>
-            <h2>Three useful things to know</h2>
-            <div class="policy-panel-item"><i class="fa-solid fa-building-shield" aria-hidden="true"></i><span>Workspace data is associated with your organization.</span></div>
-            <div class="policy-panel-item"><i class="fa-solid fa-chart-line" aria-hidden="true"></i><span>Forecasts send summarized usage and tariff settings to the OpenAI API.</span></div>
-            <div class="policy-panel-item"><i class="fa-solid fa-credit-card" aria-hidden="true"></i><span>Demo checkout does not store card details or charge money.</span></div>
-        </div>
-    </div>
-</section>
-
-<section class="container policy-main" aria-label="Privacy details">
+<details id="privacy" class="story-policy" data-policy>
+<summary>Privacy <span>Read the full details</span></summary>
+<section class="policy-main" aria-label="Privacy details">
     <nav class="policy-index" aria-label="On this page">
         <span class="policy-index-label">ON THIS PAGE</span>
         <a href="#privacy-collect">Information we store</a>
@@ -67,7 +46,7 @@
                 <p>Email <a href="mailto:{{ config('mail.contact_to') }}">{{ config('mail.contact_to') }}</a> with questions about your information or to request deletion of your account and associated workspace data. Include enough information for us to identify the workspace; please do not email private meter data as part of the request.</p>
             </section>
         </article>
-        <div class="policy-next obs-light-glass"><i class="fa-solid fa-file-contract" aria-hidden="true"></i><div><strong>Using Caldren?</strong><p>Read the service terms for trial, forecast, and demo checkout details.</p></div><a href="{{ route('terms') }}">Read Terms</a></div>
+        <div class="policy-next obs-light-glass"><i class="fa-solid fa-file-contract" aria-hidden="true"></i><div><strong>Using Caldren?</strong><p>Read the service terms for trial, forecast, and demo checkout details.</p></div><a href="{{ route('home') }}#terms">Read Terms</a></div>
     </div>
 </section>
-@endsection
+</details>

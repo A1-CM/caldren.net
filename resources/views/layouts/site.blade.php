@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#102A33"><link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}"><meta name="description" content="Caldren helps commercial building teams forecast energy demand and act on opportunities with AI energy intelligence."><title>@yield('title', 'Caldren — AI energy intelligence')</title>@vite(['resources/css/app.css','resources/js/app.js'])</head>
-<body class="site-body"><a class="skip-link" href="#main-content">Skip to content</a><div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+<body class="site-body"><a class="skip-link" href="#main-content">Skip to content</a>
 <header class="site-header console-header">
     <div class="console-header-inner">
         <a class="brand" href="{{ route('home') }}" aria-label="Caldren home" @if(request()->routeIs('home')) aria-current="page" @endif>
@@ -12,9 +12,9 @@
         </button>
         <nav id="main-navigation" aria-label="Main navigation">
             <a href="{{ route('product') }}" @if(request()->routeIs('product')) aria-current="page" @endif>Product</a>
-            <a href="{{ route('how') }}" @if(request()->routeIs('how')) aria-current="page" @endif>How it works</a>
-            <a href="{{ route('pricing') }}" @if(request()->routeIs('pricing')) aria-current="page" @endif>Pricing</a>
-            <a href="{{ route('contact') }}" @if(request()->routeIs('contact')) aria-current="page" @endif>Contact</a>
+            <a href="{{ route('home') }}#how-it-works" data-section-link="how-it-works">How it works</a>
+            <a href="{{ route('home') }}#pricing" data-section-link="pricing">Pricing</a>
+            <a href="{{ route('home') }}#contact" data-section-link="contact">Contact</a>
             <div class="console-mobile-actions">
                 @auth
                     <a href="{{ route('dashboard') }}"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Dashboard</a>
@@ -35,6 +35,6 @@
     </div>
     <svg class="console-waveform" viewBox="0 0 1440 20" preserveAspectRatio="none" aria-hidden="true"><path d="M0 12h245l12-5 10 10 14-13 12 8 10-4h160l10-3 12 7 12-10 13 9 12-4h260l12-6 13 12 12-15 12 10 13-4h280l12-5 12 10 14-12 12 7 12-4h240" /></svg>
 </header>
-<main id="main-content">@if(session('success'))<div class="flash success" role="status">{{ session('success') }}</div>@endif
+<main id="main-content" tabindex="-1">@if(session('success'))<div class="flash success" role="status">{{ session('success') }}</div>@endif
 @yield('content')</main>
-<footer class="site-footer"><div class="footer-top"><div><a class="brand" href="{{ route('home') }}"><span class="brand-mark-small"><i class="fa-solid fa-wave-square" aria-hidden="true"></i></span><span>Caldren</span></a><p>AI energy intelligence for better building decisions.</p></div><div><strong>Explore</strong><a href="{{ route('product') }}">Product</a><a href="{{ route('how') }}">How it works</a><a href="{{ route('pricing') }}">Pricing</a></div><div><strong>Company</strong><a href="{{ route('contact') }}">Contact</a><a href="{{ route('privacy') }}">Privacy</a><a href="{{ route('terms') }}">Terms</a></div></div><div class="footer-bottom"><span>© {{ date('Y') }} Caldren</span><span>Built for a clearer energy future.</span></div></footer></body></html>
+<footer class="site-footer"><div class="footer-top"><div><a class="brand" href="{{ route('home') }}"><span class="brand-mark-small"><i class="fa-solid fa-wave-square" aria-hidden="true"></i></span><span>Caldren</span></a><p>AI energy intelligence for better building decisions.</p></div><div><strong>Explore</strong><a href="{{ route('product') }}">Product</a><a href="{{ route('home') }}#how-it-works">How it works</a><a href="{{ route('home') }}#pricing">Pricing</a></div><div><strong>Company</strong><a href="{{ route('home') }}#contact">Contact</a><a href="{{ route('home') }}#privacy">Privacy</a><a href="{{ route('home') }}#terms">Terms</a></div></div><div class="footer-bottom"><span>© {{ date('Y') }} Caldren</span><span>Built for a clearer energy future.</span></div></footer></body></html>

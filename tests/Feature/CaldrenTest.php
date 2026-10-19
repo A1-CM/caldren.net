@@ -29,8 +29,18 @@ class CaldrenTest extends TestCase
 
     public function test_public_pages_render(): void
     {
-        foreach (['/', '/product', '/how-it-works', '/pricing', '/contact', '/privacy', '/terms', '/register', '/login'] as $url) {
+        foreach (['/', '/product', '/register', '/login'] as $url) {
             $this->get($url)->assertOk();
+        }
+    }
+
+    public function test_previous_marketing_urls_redirect_to_home_sections(): void
+    {
+        $home = $this->get(route('home'))->assertOk();
+
+        foreach (['how-it-works', 'pricing', 'contact', 'privacy', 'terms'] as $section) {
+            $this->get('/'.$section)->assertStatus(301)->assertRedirect('/#'.$section);
+            $home->assertSee('id="'.$section.'"', false);
         }
     }
 
@@ -44,10 +54,10 @@ class CaldrenTest extends TestCase
             'email' => 'ada@example.com',
             'company' => 'North Estates',
             'message' => 'We manage three offices and have monthly bills.',
-        ])->assertRedirect()->assertSessionHas('contact_success');
+        ])->assertRedirect(route('home').'#contact')->assertSessionHas('contact_success');
 
         $this->assertDatabaseHas('contact_leads', ['name' => 'Ada North', 'email' => 'ada@example.com']);
-        $this->get(route('contact'))->assertOk()->assertSee('Thanks. We received your message.');
+        $this->get(route('home'))->assertOk()->assertSee('Thanks. We received your message.');
         Mail::assertSent(ContactInquiry::class, function (ContactInquiry $mail): bool {
             return $mail->hasTo('hello@caldren.net')
                 && $mail->hasReplyTo('ada@example.com', 'Ada North')
@@ -63,7 +73,7 @@ class CaldrenTest extends TestCase
             'name' => '',
             'email' => 'not-an-email',
             'message' => '',
-        ])->assertSessionHasErrors(['name', 'email', 'message']);
+        ])->assertRedirect(route('home').'#contact')->assertSessionHasErrors(['name', 'email', 'message'])->assertSessionHasInput('email', 'not-an-email');
 
         $this->assertDatabaseCount('contact_leads', 0);
         Mail::assertNothingSent();
@@ -77,10 +87,10 @@ class CaldrenTest extends TestCase
             'name' => 'Ada North',
             'email' => 'ada@example.com',
             'message' => 'We have bills for two sites.',
-        ])->assertRedirect()->assertSessionHas('warning');
+        ])->assertRedirect(route('home').'#contact')->assertSessionHas('warning');
 
         $this->assertDatabaseHas('contact_leads', ['name' => 'Ada North', 'email' => 'ada@example.com']);
-        $this->get(route('contact'))->assertOk()->assertSee('Your message was saved')->assertSee('hello@caldren.net');
+        $this->get(route('home'))->assertOk()->assertSee('Your message was saved')->assertSee('hello@caldren.net');
     }
 
     public function test_signup_starts_trial_and_creates_workspace(): void

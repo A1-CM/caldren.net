@@ -7,11 +7,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'site.home')->name('home');
 Route::view('/product', 'site.product')->name('product');
-Route::view('/how-it-works', 'site.how')->name('how');
-Route::view('/pricing', 'site.pricing')->name('pricing');
-Route::view('/contact', 'site.contact')->name('contact');
-Route::view('/privacy', 'site.privacy')->name('privacy');
-Route::view('/terms', 'site.terms')->name('terms');
+Route::redirect('/how-it-works', '/#how-it-works', 301)->name('how');
+Route::redirect('/pricing', '/#pricing', 301)->name('pricing');
+Route::redirect('/contact', '/#contact', 301)->name('contact');
+Route::redirect('/privacy', '/#privacy', 301)->name('privacy');
+Route::redirect('/terms', '/#terms', 301)->name('terms');
 Route::post('/contact', [CaldrenController::class, 'contact'])->middleware('throttle:5,1')->name('contact.store');
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AccountController::class, 'register'])->name('register');

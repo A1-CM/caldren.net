@@ -1,27 +1,6 @@
-@extends('layouts.site')
-@section('title', 'Terms — Caldren')
-@section('content')
-<section class="policy-hero" aria-labelledby="terms-title">
-    <div class="policy-hero-grid" aria-hidden="true"></div>
-    <div class="policy-hero-glow" aria-hidden="true"></div>
-    <div class="container policy-hero-layout">
-        <div class="policy-hero-copy">
-            <span class="obs-kicker"><span class="obs-live-dot" aria-hidden="true"></span> USING CALDREN</span>
-            <h1 id="terms-title">Clear expectations for every decision.</h1>
-            <p>Caldren brings building energy history and cautious estimates into one workspace. These terms explain how the current service, trial, and demo checkout work.</p>
-            <span class="policy-updated">Last updated October 16, 2026</span>
-        </div>
-        <div class="policy-hero-panel observatory-glass">
-            <span class="policy-panel-label">AT A GLANCE</span>
-            <h2>How the service works today</h2>
-            <div class="policy-panel-item"><i class="fa-solid fa-user-group" aria-hidden="true"></i><span>Your team manages its workspace, buildings, and invitations.</span></div>
-            <div class="policy-panel-item"><i class="fa-solid fa-gauge-high" aria-hidden="true"></i><span>Forecasts and opportunities are estimates for human review.</span></div>
-            <div class="policy-panel-item"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i><span>The 30-day trial needs no card; checkout is a demo simulation.</span></div>
-        </div>
-    </div>
-</section>
-
-<section class="container policy-main" aria-label="Terms details">
+<details id="terms" class="story-policy" data-policy>
+<summary>Terms <span>Read the full details</span></summary>
+<section class="policy-main" aria-label="Terms details">
     <nav class="policy-index" aria-label="On this page">
         <span class="policy-index-label">ON THIS PAGE</span>
         <a href="#terms-service">The service</a>
@@ -71,7 +50,7 @@
                 <p>Forecast generation depends on an external API and can fail or be unavailable. If it fails, historical data remains available in the workspace and you can try again later. For questions about the service, contact <a href="mailto:{{ config('mail.contact_to') }}">{{ config('mail.contact_to') }}</a>.</p>
             </section>
         </article>
-        <div class="policy-next obs-light-glass"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><div><strong>Questions about your data?</strong><p>See what Caldren stores and sends when you request a forecast.</p></div><a href="{{ route('privacy') }}">Read Privacy</a></div>
+        <div class="policy-next obs-light-glass"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><div><strong>Questions about your data?</strong><p>See what Caldren stores and sends when you request a forecast.</p></div><a href="{{ route('home') }}#privacy">Read Privacy</a></div>
     </div>
 </section>
-@endsection
+</details>

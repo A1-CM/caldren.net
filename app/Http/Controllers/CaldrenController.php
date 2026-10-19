@@ -40,7 +40,13 @@ class CaldrenController extends Controller
 
     public function contact(Request $request): RedirectResponse
     {
-        $data = $request->validate(['name' => 'required|string|max:120', 'email' => 'required|email|max:255', 'company' => 'nullable|string|max:160', 'message' => 'required|string|max:4000']);
+        try {
+            $data = $request->validate(['name' => 'required|string|max:120', 'email' => 'required|email|max:255', 'company' => 'nullable|string|max:160', 'message' => 'required|string|max:4000']);
+        } catch (ValidationException $error) {
+            $error->redirectTo(route('home').'#contact');
+
+            throw $error;
+        }
         $leadId = DB::table('contact_leads')->insertGetId($data + ['created_at' => now(), 'updated_at' => now()]);
 
         try {
@@ -52,10 +58,10 @@ class CaldrenController extends Controller
         } catch (\Throwable $error) {
             Log::error('Contact notification failed.', ['contact_lead_id' => $leadId, 'error' => $error->getMessage()]);
 
-            return back()->with('warning', 'Your message was saved, but our email notification could not be sent.');
+            return redirect()->to(route('home').'#contact')->with('warning', 'Your message was saved, but our email notification could not be sent.');
         }
 
-        return back()->with('contact_success', 'Thanks. We received your message.');
+        return redirect()->to(route('home').'#contact')->with('contact_success', 'Thanks. We received your message.');
     }
 
     public function dashboard(Request $request)

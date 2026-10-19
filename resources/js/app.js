@@ -78,11 +78,9 @@ const requestParallaxUpdate = () => {
 };
 
 if (parallaxHero) {
-  if (!reducedMotionQuery.matches) {
-    window.addEventListener('scroll', requestParallaxUpdate, {passive: true});
-    window.addEventListener('resize', requestParallaxUpdate);
-    requestParallaxUpdate();
-  }
+  window.addEventListener('scroll', requestParallaxUpdate, {passive: true});
+  window.addEventListener('resize', requestParallaxUpdate);
+  requestParallaxUpdate();
 
   reducedMotionQuery.addEventListener('change', (event) => {
     if (event.matches) {
@@ -104,4 +102,100 @@ const billData = document.getElementById('bill-chart-data');
 if (billCanvas && billData) {
   const {labels, amounts} = JSON.parse(billData.textContent);
   new Chart(billCanvas, {type:'line',data:{labels,datasets:[{label:'Monthly bill',data:amounts,borderColor:'#0B8F7A',backgroundColor:'rgba(11,143,122,.1)',fill:true,tension:.25,pointRadius:4,pointBackgroundColor:'#0B8F7A',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#53686D'}},y:{beginAtZero:true,grid:{color:'#e8efea'},ticks:{color:'#53686D'}}}}});
+}
+
+// Progressively enhance the public story; all content remains readable without JavaScript.
+const storyPage = document.querySelector('[data-story-page]');
+if (storyPage) {
+  const scenes = [...storyPage.querySelectorAll('[data-scroll-scene]')].map((element) => ({
+    element,
+    image: element.querySelector('[data-scene-image]'),
+    steps: [...element.querySelectorAll('[data-story-step]')],
+    caption: element.querySelector('[data-scene-caption]'),
+  }));
+  const sectionLinks = [...document.querySelectorAll('[data-section-link]')];
+  const sections = sectionLinks.map((link) => ({link, section: document.getElementById(link.dataset.sectionLink)}));
+  let frame = 0;
+  const renderStory = () => {
+    frame = 0;
+    const viewport = window.innerHeight;
+    const headerHeight = header?.offsetHeight || 96;
+    const availableScroll = document.documentElement.scrollHeight - viewport;
+    header?.style.setProperty('--reading-progress', String(availableScroll > 0 ? window.scrollY / availableScroll : 0));
+    for (const scene of scenes) {
+      const bounds = scene.element.getBoundingClientRect();
+      if (bounds.bottom < 0 || bounds.top > viewport) continue;
+      const progress = Math.max(0, Math.min(1, (viewport - bounds.top) / (bounds.height + viewport)));
+      if (scene.image && !reducedMotionQuery.matches) {
+        const amplitude = window.innerWidth <= 760 ? 10 : 24;
+        scene.image.style.setProperty('--scene-shift', `${(0.5 - progress) * amplitude}px`);
+        scene.image.style.setProperty('--scene-scale', String(1.07 + progress * 0.12));
+      }
+      if (scene.steps.length) {
+        let active = scene.steps[0];
+        for (const step of scene.steps) {
+          if (step.getBoundingClientRect().top < headerHeight + (viewport - headerHeight) * 0.5) active = step;
+        }
+        scene.steps.forEach((step) => step.classList.toggle('is-current', step === active));
+        if (scene.caption && scene.caption.textContent !== active.dataset.caption) scene.caption.textContent = active.dataset.caption;
+      }
+    }
+    for (const {link, section} of sections) {
+      if (!section) continue;
+      const bounds = section.getBoundingClientRect();
+      if (bounds.top <= headerHeight + 70 && bounds.bottom > headerHeight + 70) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    }
+  };
+  const queueStory = () => { if (!frame) frame = requestAnimationFrame(renderStory); };
+  window.addEventListener('scroll', queueStory, {passive: true});
+  window.addEventListener('resize', queueStory);
+  const revealElements = [...storyPage.querySelectorAll('[data-reveal]')];
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.classList.remove('reveal-pending');
+          observer.unobserve(entry.target);
+        }
+      }
+    }, {threshold: 0, rootMargin: '0px 0px -30px 0px'});
+    for (const element of revealElements) {
+      if (!reducedMotionQuery.matches && element.getBoundingClientRect().top > window.innerHeight) {
+        element.classList.add('reveal-pending');
+        observer.observe(element);
+      }
+    }
+  }
+  storyPage.addEventListener('focusin', (event) => event.target.closest('[data-reveal]')?.classList.remove('reveal-pending'));
+  reducedMotionQuery.addEventListener('change', () => {
+    if (reducedMotionQuery.matches) {
+      revealElements.forEach((element) => element.classList.remove('reveal-pending'));
+      scenes.forEach(({image}) => {
+        image?.style.removeProperty('--scene-shift');
+        image?.style.removeProperty('--scene-scale');
+      });
+    }
+    queueStory();
+  });
+  const openHashTarget = () => {
+    let id;
+    try { id = decodeURIComponent(window.location.hash.slice(1)); } catch { return; }
+    const target = document.getElementById(id);
+    if (!target) return;
+    let ancestor = target;
+    while (ancestor) {
+      if (ancestor instanceof HTMLDetailsElement) ancestor.open = true;
+      ancestor.classList?.remove('reveal-pending');
+      ancestor = ancestor.parentElement;
+    }
+    requestAnimationFrame(() => {
+      target.scrollIntoView({block: 'start', behavior: 'instant'});
+      queueStory();
+    });
+  };
+  window.addEventListener('hashchange', openHashTarget);
+  storyPage.querySelectorAll('details').forEach((details) => details.addEventListener('toggle', queueStory));
+  openHashTarget();
+  queueStory();
 }
