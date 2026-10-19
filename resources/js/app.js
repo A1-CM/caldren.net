@@ -296,3 +296,40 @@ if (campusSalesDialog instanceof HTMLDialogElement) {
 
   if (campusSalesDialog.dataset.openOnLoad === 'true') campusSalesDialog.showModal();
 }
+
+
+const footerRevealElements = [...document.querySelectorAll('footer.site-footer [data-reveal]')];
+if (footerRevealElements.length && 'IntersectionObserver' in window) {
+  let footerRevealObserver;
+  const clearFooterReveal = () => {
+    footerRevealElements.forEach((element) => element.classList.remove('reveal-pending'));
+    footerRevealObserver?.disconnect();
+  };
+
+  if (!reducedMotionQuery.matches) {
+    footerRevealObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.classList.remove('reveal-pending');
+          footerRevealObserver.unobserve(entry.target);
+        }
+      }
+    }, {threshold: 0, rootMargin: '0px 0px -30px 0px'});
+
+    for (const element of footerRevealElements) {
+      if (element.getBoundingClientRect().top > window.innerHeight) {
+        element.classList.add('reveal-pending');
+        footerRevealObserver.observe(element);
+      }
+    }
+
+    document.addEventListener('focusin', (event) => {
+      const reveal = event.target.closest('footer.site-footer [data-reveal]');
+      reveal?.classList.remove('reveal-pending');
+    });
+  }
+
+  reducedMotionQuery.addEventListener('change', (event) => {
+    if (event.matches) clearFooterReveal();
+  });
+}

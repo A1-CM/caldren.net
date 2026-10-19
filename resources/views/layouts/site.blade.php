@@ -37,4 +37,35 @@
 </header>
 <main id="main-content" tabindex="-1">@if(session('success'))<div class="flash success" role="status">{{ session('success') }}</div>@endif
 @yield('content')</main>
-<footer class="site-footer"><div class="footer-top"><div><a class="brand" href="{{ route('home') }}"><span class="brand-mark-small"><i class="fa-solid fa-wave-square" aria-hidden="true"></i></span><span>Caldren</span></a><p>AI energy forecasting and optimization insights for energy teams.</p></div><div><strong>Explore</strong><a href="{{ route('product') }}">Product</a><a href="{{ route('home') }}#how-it-works">How it works</a><a href="{{ route('home') }}#pricing">Pricing</a></div><div><strong>Company</strong><a href="{{ route('home') }}#contact">Contact</a><a href="{{ route('home') }}#privacy">Privacy</a><a href="{{ route('home') }}#terms">Terms</a></div></div><div class="footer-bottom"><span>© {{ date('Y') }} Caldren</span><span>Built to support clearer energy decisions.</span></div></footer></body></html>
+<footer class="site-footer">
+    <section class="footer-contact-band" aria-labelledby="footer-contact-title" data-reveal>
+        <div class="footer-contact-photo" aria-hidden="true"><img src="{{ asset('images/caldren-building-dusk.webp') }}" alt="" loading="lazy" width="1536" height="1024"></div>
+        <div class="footer-contact-content">
+            <span class="footer-kicker">ENERGY / UTILITIES</span>
+            <h2 id="footer-contact-title">Have an energy question? Let’s bring it into focus.</h2>
+            <p>Tell us about your portfolio, available energy data, and goals.</p>
+            <a class="footer-contact-cta" href="{{ route('home') }}#contact">Talk with the Caldren team</a>
+        </div>
+    </section>
+    <div class="footer-base" data-reveal>
+        <div class="footer-base-inner">
+            <div class="footer-brand-block">
+                <a class="brand" href="{{ route('home') }}" aria-label="Caldren home"><span class="brand-mark-small"><i class="fa-solid fa-wave-square" aria-hidden="true"></i></span><span>Caldren</span></a>
+                <p>AI energy forecasting and optimization insights for energy teams.</p>
+            </div>
+            <nav class="footer-link-group" aria-label="Explore Caldren">
+                <h3>Explore</h3>
+                <a href="{{ route('product') }}">Product</a>
+                <a href="{{ route('home') }}#how-it-works">How it works</a>
+                <a href="{{ route('home') }}#pricing">Pricing</a>
+            </nav>
+            <nav class="footer-link-group" aria-label="Company information">
+                <h3>Company</h3>
+                <a href="{{ route('home') }}#contact">Contact</a>
+                <a href="{{ route('home') }}#privacy">Privacy</a>
+                <a href="{{ route('home') }}#terms">Terms</a>
+            </nav>
+            <div class="footer-bottom"><span>© {{ date('Y') }} Caldren</span><span>Built to support clearer energy decisions.</span></div>
+        </div>
+    </div>
+</footer></body></html>
