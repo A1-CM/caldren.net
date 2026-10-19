@@ -41,7 +41,7 @@ class AccountController extends Controller
             } else {
                 $organization = Organization::create(['name' => $data['organization'], 'trial_ends_at' => now()->addDays(30)]);
                 $organization->users()->attach($user->id, ['role' => 'owner']);
-                $organization->subscription()->create(['status' => 'trialing', 'monthly_price_cents' => 9900]);
+                $organization->subscription()->create(['plan_key' => 'site', 'status' => 'trialing', 'monthly_price_cents' => 4900]);
             }
 
             return $user;

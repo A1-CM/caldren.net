@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
@@ -62,6 +63,52 @@ class CaldrenController extends Controller
         }
 
         return redirect()->to(route('home').'#contact')->with('contact_success', 'Thanks. We received your message.');
+    }
+
+    public function campusSalesInquiry(Request $request): RedirectResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:120',
+            'email' => 'required|email|max:255',
+            'company' => 'required|string|max:160',
+            'estimated_building_count' => 'required|integer|min:1|max:1000000',
+            'operating_regions' => 'required|string|max:255',
+            'available_energy_data' => 'required|in:monthly_bills,interval_readings,both,not_sure',
+            'goals' => 'required|string|max:2000',
+            'target_timeline' => 'required|in:exploring,within_3_months,within_6_months,later',
+            'message' => 'nullable|string|max:4000',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->to(route('home').'#pricing')
+                ->withErrors($validator, 'sales')
+                ->withInput()
+                ->with('open_sales_modal', true);
+        }
+
+        $data = $validator->validated();
+        $data['estimated_building_count'] = (int) $data['estimated_building_count'];
+        $inquiry = $data + ['inquiry_type' => 'campus_sales'];
+        $inquiry['message'] = $inquiry['message'] ?? '';
+        $leadId = DB::table('contact_leads')->insertGetId($inquiry + ['created_at' => now(), 'updated_at' => now()]);
+
+        try {
+            if (app()->isProduction() && in_array(config('mail.default'), ['log', 'array'], true)) {
+                throw new RuntimeException('Contact mail transport is not configured.');
+            }
+
+            Mail::to(config('mail.contact_to'))->send(new ContactInquiry($inquiry, $leadId));
+        } catch (\Throwable $error) {
+            Log::error('Campus sales inquiry notification failed.', ['contact_lead_id' => $leadId, 'error' => $error->getMessage()]);
+
+            return redirect()->to(route('home').'#pricing')
+                ->with('open_sales_modal', true)
+                ->with('sales_warning', 'Your inquiry was saved, but our email notification could not be sent. Please contact us directly.');
+        }
+
+        return redirect()->to(route('home').'#pricing')
+            ->with('open_sales_modal', true)
+            ->with('sales_success', 'Thanks. Your Campus inquiry has been received.');
     }
 
     public function dashboard(Request $request)
@@ -188,9 +235,10 @@ class CaldrenController extends Controller
         $payments = DB::table('demo_payments')->where('organization_id', $organization->id)->latest()->get();
         $plans = config('plans');
         $requestedPlan = $request->query('plan');
-        $selectedPlanKey = is_string($requestedPlan) && isset($plans[$requestedPlan]) ? $requestedPlan : $organization->subscription?->plan_key;
+        $selectedPlanKey = is_string($requestedPlan) && ($plans[$requestedPlan]['checkout_enabled'] ?? false) ? $requestedPlan : ($organization->subscription?->plan_key ?? ($organization->trial_ends_at->isFuture() ? 'site' : null));
+        $checkoutPlans = array_filter($plans, fn (array $plan): bool => $plan['checkout_enabled'] ?? false);
 
-        return view('dashboard.billing', compact('organization', 'payments', 'isOwner', 'plans', 'selectedPlanKey'));
+        return view('dashboard.billing', compact('organization', 'payments', 'isOwner', 'plans', 'checkoutPlans', 'selectedPlanKey'));
     }
 
     public function demoCheckout(Request $request)
@@ -199,7 +247,7 @@ class CaldrenController extends Controller
         abort_unless($organization->users()->where('users.id', $request->user()->id)->wherePivot('role', 'owner')->exists(), 403);
         $data = $request->validate([
             'demo_card' => 'required|string',
-            'plan_key' => ['required', 'string', 'in:'.implode(',', array_keys(config('plans')))],
+            'plan_key' => ['required', 'string', 'in:'.implode(',', array_keys(array_filter(config('plans'), fn (array $plan): bool => $plan['checkout_enabled'] ?? false)))],
         ]);
         if (preg_replace('/\s+/', '', $data['demo_card']) !== '4242424242424242') {
             throw ValidationException::withMessages(['demo_card' => 'Use the displayed 4242 demo card number. No real cards are accepted.']);

@@ -254,3 +254,22 @@ if (storyPage) {
   openHashTarget();
   queueStory();
 }
+
+
+const campusSalesDialog = document.querySelector('[data-sales-dialog]');
+if (campusSalesDialog instanceof HTMLDialogElement) {
+  const salesDialogOpeners = [...document.querySelectorAll('[data-sales-dialog-open]')];
+  const salesDialogClosers = [...campusSalesDialog.querySelectorAll('[data-sales-dialog-close]')];
+
+  salesDialogOpeners.forEach((opener) => {
+    opener.addEventListener('click', () => campusSalesDialog.showModal());
+  });
+  salesDialogClosers.forEach((closer) => {
+    closer.addEventListener('click', () => campusSalesDialog.close());
+  });
+  campusSalesDialog.addEventListener('click', (event) => {
+    if (event.target === campusSalesDialog) campusSalesDialog.close();
+  });
+
+  if (campusSalesDialog.dataset.openOnLoad === 'true') campusSalesDialog.showModal();
+}

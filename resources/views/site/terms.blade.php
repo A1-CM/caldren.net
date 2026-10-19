@@ -37,12 +37,12 @@
             <section id="terms-trial" class="policy-section">
                 <span class="policy-section-number">05 / ACCESS</span>
                 <h2>Trial and access</h2>
-                <p>New organizations receive a 30-day trial without providing a card, with a maximum of 50 buildings in the trial workspace. After access expires, historical workspace data remains visible, while adding buildings or bills, uploading readings, and generating forecasts are gated until access is active again.</p>
+                <p>New organizations receive a 30-day trial without providing a card, with a maximum of 3 buildings in the Site trial workspace. After access expires, historical workspace data remains visible, while adding buildings or bills, uploading readings, and generating forecasts are gated until access is active again.</p>
             </section>
             <section id="terms-demo" class="policy-section">
                 <span class="policy-section-number">06 / DEMO BILLING</span>
                 <h2>Demo checkout</h2>
-                <p>Caldren offers Site at USD 49/month for up to 3 buildings, Portfolio at USD 99/month for up to 10, and Campus at USD 249/month for up to 50. The current checkout is a clearly labelled simulation available to signed-in workspace owners. It accepts only the displayed 4242 demo number. A successful simulation records the selected tier and payment amount and adds one month of access; no money is charged, no card details are stored, and access does not renew automatically.</p>
+                <p>Caldren offers Site at USD 49/month for up to 3 buildings and Portfolio at USD 99/month for up to 10. Campus portfolios can contact sales for a tailored discussion. The current checkout is a clearly labelled simulation available to signed-in workspace owners. It accepts only the displayed 4242 demo number. A successful simulation records the selected tier and payment amount and adds one month of access; no money is charged, no card details are stored, and access does not renew automatically.</p>
             </section>
             <section id="terms-availability" class="policy-section">
                 <span class="policy-section-number">07 / AVAILABILITY</span>

@@ -13,6 +13,7 @@ Route::redirect('/contact', '/#contact', 301)->name('contact');
 Route::redirect('/privacy', '/#privacy', 301)->name('privacy');
 Route::redirect('/terms', '/#terms', 301)->name('terms');
 Route::post('/contact', [CaldrenController::class, 'contact'])->middleware('throttle:5,1')->name('contact.store');
+Route::post('/contact/campus-sales', [CaldrenController::class, 'campusSalesInquiry'])->middleware('throttle:5,1')->name('contact.sales.store');
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AccountController::class, 'register'])->name('register');
     Route::post('/register', [AccountController::class, 'store'])->middleware('throttle:5,1')->name('register.store');

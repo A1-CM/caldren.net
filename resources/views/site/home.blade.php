@@ -8,7 +8,7 @@
         <span class="obs-kicker"><span class="obs-live-dot" aria-hidden="true"></span> AI ENERGY INTELLIGENCE FOR BUILDINGS</span>
         <h1 id="home-title">See tomorrow’s energy demand. <span class="obs-glow-text">Make better decisions today.</span></h1>
         <p>Give your team a clear view of building usage, likely demand peaks, and opportunities worth reviewing. Start with the data you already have.</p>
-        <div class="hero-centered-actions"><a class="button" href="{{ route('register') }}">Start your 30-day trial</a><a class="obs-outline-button" href="{{ route('product') }}">Explore the product</a></div>
+        <div class="hero-centered-actions"><a class="button" href="{{ route('register') }}">Start Site trial</a><a class="obs-outline-button" href="{{ route('product') }}">Explore the product</a></div>
         <div class="hero-data-notes"><span><i class="fa-solid fa-credit-card" aria-hidden="true"></i> No card required</span><span><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Bills or interval readings</span><span><i class="fa-solid fa-user-check" aria-hidden="true"></i> Your team reviews estimates</span></div>
     </div>
     <a class="hero-scroll-cue" href="#story"><span>SCROLL TO SEE HOW IT CONNECTS</span><i class="fa-solid fa-arrow-down" aria-hidden="true"></i></a>
@@ -30,11 +30,11 @@
 <details><summary>Can I use Caldren with only utility bills?</summary><p>Yes. Add at least two bills to compare usage and spending over time. Interval readings are required for daily energy and peak forecasts.</p></details>
 <details><summary>What do the forecasts and optimization insights show?</summary><p>Forecasts estimate daily energy use and peak demand for the next seven days when data qualifies. Possible peak alerts and tariff-aware opportunities can help your team decide what to investigate. Review all estimates against actual conditions; Caldren does not control equipment.</p></details>
 <details><summary>Can my energy and operations teams share a workspace?</summary><p>Yes. A workspace owner can invite teammates to the organization so they can review the same site data, forecasts, and opportunities.</p></details>
-<details><summary>What happens after the 30-day trial?</summary><p>Historical data stays visible. Adding sites or bills, uploads, and new forecasts are gated until demo access is activated. Choose a tier after the trial; the trial workspace supports up to 50 buildings.</p></details>
-<details><summary>Does demo checkout charge a real card?</summary><p>No. A signed-in workspace owner selects Site ($49/month, up to 3 buildings), Portfolio ($99/month, up to 10), or Campus ($249/month, up to 50) and uses the 4242 demo number. Checkout records a simulated payment, adds one month of access, stores no card details, and does not renew automatically.</p></details>
+<details><summary>What happens after the 30-day trial?</summary><p>Historical data stays visible. Adding sites or bills, uploads, and new forecasts are gated until demo access is activated. Choose Site or Portfolio after the trial; the Site trial supports up to 3 buildings.</p></details>
+<details><summary>Does demo checkout charge a real card?</summary><p>No. A signed-in workspace owner selects Site ($49/month, up to 3 buildings) or Portfolio ($99/month, up to 10). Campus portfolios can contact sales. Self-serve demo checkout uses the 4242 number. Checkout records a simulated payment, adds one month of access, stores no card details, and does not renew automatically.</p></details>
 </div></div></section>
 @include('site.contact')
-<section class="container story-close" data-reveal><span class="eyebrow">YOUR NEXT ENERGY DECISION</span><h2>Bring your energy data into focus.</h2><p>Explore forecasts and optimization insights for 30 days. No card required.</p><a class="button" href="{{ route('register') }}">Start your free trial</a></section>
+<section class="container story-close" data-reveal><span class="eyebrow">YOUR NEXT ENERGY DECISION</span><h2>Bring your energy data into focus.</h2><p>Explore forecasts and optimization insights for 30 days. No card required.</p><a class="button" href="{{ route('register') }}">Start your Site trial</a></section>
 <section class="container story-legal" aria-label="Privacy and terms">@include('site.privacy') @include('site.terms')</section>
 </div>
 @endsection

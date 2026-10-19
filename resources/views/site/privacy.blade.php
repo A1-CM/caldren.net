@@ -33,7 +33,7 @@
             <section id="privacy-contact" class="policy-section">
                 <span class="policy-section-number">04 / INQUIRIES</span>
                 <h2>Contact inquiries</h2>
-                <p>If you use the contact form, Caldren saves your name, email address, optional company name, and message. It also attempts to email the inquiry to <a href="mailto:{{ config('mail.contact_to') }}">{{ config('mail.contact_to') }}</a> so the team can respond. If email delivery fails, the inquiry remains saved in Caldren’s database.</p>
+                <p>If you use the general contact form, Caldren saves your name, email address, optional company name, and message. A Campus sales inquiry also includes your estimated building count, operating regions, available energy data, goals, and target timeline. Caldren attempts to email submitted inquiries to <a href="mailto:{{ config('mail.contact_to') }}">{{ config('mail.contact_to') }}</a> so the team can respond. If email delivery fails, the inquiry remains saved in Caldren’s database.</p>
             </section>
             <section id="privacy-payments" class="policy-section">
                 <span class="policy-section-number">05 / DEMO BILLING</span>

@@ -39,7 +39,7 @@ class Organization extends Model
     public function buildingLimit(): int
     {
         if ($this->trial_ends_at->isFuture()) {
-            return 50;
+            return (int) config('plans.site.building_limit', 3);
         }
 
         if ($this->subscription?->status === 'active' && $this->subscription->current_period_ends_at?->isFuture()) {
