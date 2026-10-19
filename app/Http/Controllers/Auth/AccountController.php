@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Invitation;
 use App\Models\Organization;
 use App\Models\User;
+use App\Services\TurnstileVerifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,8 +23,10 @@ class AccountController extends Controller
         return view('auth.register', compact('invitation', 'invite'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, TurnstileVerifier $turnstile)
     {
+        $turnstile->verify($request, 'default', route('register'));
+
         $data = $request->validate(['name' => 'required|string|max:120', 'email' => 'required|email|max:255|unique:users,email', 'password' => 'required|string|min:12|confirmed', 'organization' => 'nullable|string|max:160', 'invite' => 'nullable|string']);
         $invite = ! empty($data['invite']) ? Invitation::where('token_hash', hash('sha256', $data['invite']))->whereNull('accepted_at')->where('expires_at', '>', now())->first() : null;
         if (! empty($data['invite']) && (! $invite || strcasecmp($invite->email, $data['email']) !== 0)) {
@@ -57,8 +60,10 @@ class AccountController extends Controller
         return view('auth.login');
     }
 
-    public function authenticate(Request $request)
+    public function authenticate(Request $request, TurnstileVerifier $turnstile)
     {
+        $turnstile->verify($request, 'default', route('login'));
+
         $data = $request->validate(['email' => 'required|email', 'password' => 'required|string']);
         if (! Auth::attempt($data, $request->boolean('remember'))) {
             throw ValidationException::withMessages(['email' => 'These credentials do not match our records.']);

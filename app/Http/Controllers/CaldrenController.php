@@ -7,6 +7,7 @@ use App\Models\Building;
 use App\Models\Invitation;
 use App\Services\ForecastService;
 use App\Services\OrganizationContext;
+use App\Services\TurnstileVerifier;
 use App\Services\UsageImporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,8 +40,10 @@ class CaldrenController extends Controller
         }
     }
 
-    public function contact(Request $request): RedirectResponse
+    public function contact(Request $request, TurnstileVerifier $turnstile): RedirectResponse
     {
+        $turnstile->verify($request, 'default', route('home').'#contact');
+
         try {
             $data = $request->validate(['name' => 'required|string|max:120', 'email' => 'required|email|max:255', 'company' => 'nullable|string|max:160', 'message' => 'required|string|max:4000']);
         } catch (ValidationException $error) {
@@ -65,8 +68,10 @@ class CaldrenController extends Controller
         return redirect()->to(route('home').'#contact')->with('contact_success', 'Thanks. We received your message.');
     }
 
-    public function campusSalesInquiry(Request $request): RedirectResponse
+    public function campusSalesInquiry(Request $request, TurnstileVerifier $turnstile): RedirectResponse
     {
+        $turnstile->verify($request, 'sales', route('home').'#pricing');
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:120',
             'email' => 'required|email|max:255',

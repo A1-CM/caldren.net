@@ -17,6 +17,18 @@ class CaldrenTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function configureSuccessfulTurnstile(): array
+    {
+        config()->set('services.turnstile.site_key', '1x00000000000000000000AA');
+        config()->set('services.turnstile.secret_key', '1x0000000000000000000000000000000AA');
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://challenges.cloudflare.com/turnstile/v0/siteverify' => Http::response(['success' => true], 200),
+        ]);
+
+        return ['cf-turnstile-response' => 'test-turnstile-token'];
+    }
+
     private function workspace(): array
     {
         $user = User::factory()->create();
@@ -36,7 +48,10 @@ class CaldrenTest extends TestCase
 
     public function test_homepage_renders_all_illustrative_testimonials_and_manual_controls(): void
     {
+        config()->set('services.turnstile.site_key', 'test-site-key');
+
         $this->get(route('home'))
+            ->assertSee('class="cf-turnstile"', false)
             ->assertSee('Sample statements for design preview only. These are not real customer testimonials.')
             ->assertSee('A clear view of utility bills and interval readings would help our energy team prepare for the week.')
             ->assertSee('Putting a demand outlook beside its historical baseline would give us a better starting point for review.')
@@ -83,9 +98,10 @@ class CaldrenTest extends TestCase
     public function test_contact_inquiry_is_saved_and_sent_to_the_configured_inbox(): void
     {
         Mail::fake();
+        $turnstile = $this->configureSuccessfulTurnstile();
         config()->set('mail.contact_to', 'hello@caldren.net');
 
-        $this->post(route('contact.store'), [
+        $this->post(route('contact.store'), $turnstile + [
             'name' => 'Ada North',
             'email' => 'ada@example.com',
             'company' => 'North Estates',
@@ -104,8 +120,9 @@ class CaldrenTest extends TestCase
     public function test_campus_sales_inquiry_saves_portfolio_details_and_emails_the_configured_inbox(): void
     {
         Mail::fake();
+        $turnstile = $this->configureSuccessfulTurnstile();
         config()->set('mail.contact_to', 'hello@caldren.net');
-        $inquiry = [
+        $inquiry = $turnstile + [
             'name' => 'Ada North',
             'email' => 'ada@north.example',
             'company' => 'North Estates',
@@ -145,8 +162,9 @@ class CaldrenTest extends TestCase
     public function test_invalid_campus_sales_inquiry_reopens_the_dialog_without_saving(): void
     {
         Mail::fake();
+        $turnstile = $this->configureSuccessfulTurnstile();
 
-        $this->post(route('contact.sales.store'), [
+        $this->post(route('contact.sales.store'), $turnstile + [
             'name' => '',
             'email' => 'invalid',
             'company' => '',
@@ -166,8 +184,9 @@ class CaldrenTest extends TestCase
     public function test_campus_sales_inquiry_remains_saved_when_notification_fails(): void
     {
         Mail::shouldReceive('to')->once()->andThrow(new \RuntimeException('Mail transport unavailable'));
+        $turnstile = $this->configureSuccessfulTurnstile();
 
-        $this->post(route('contact.sales.store'), [
+        $this->post(route('contact.sales.store'), $turnstile + [
             'name' => 'Ada North',
             'email' => 'ada@north.example',
             'company' => 'North Estates',
@@ -187,8 +206,9 @@ class CaldrenTest extends TestCase
     public function test_invalid_contact_inquiry_is_not_saved_or_sent(): void
     {
         Mail::fake();
+        $turnstile = $this->configureSuccessfulTurnstile();
 
-        $this->post(route('contact.store'), [
+        $this->post(route('contact.store'), $turnstile + [
             'name' => '',
             'email' => 'not-an-email',
             'message' => '',
@@ -201,8 +221,9 @@ class CaldrenTest extends TestCase
     public function test_contact_inquiry_remains_saved_when_notification_fails(): void
     {
         Mail::shouldReceive('to')->once()->andThrow(new \RuntimeException('Mail transport unavailable'));
+        $turnstile = $this->configureSuccessfulTurnstile();
 
-        $this->post(route('contact.store'), [
+        $this->post(route('contact.store'), $turnstile + [
             'name' => 'Ada North',
             'email' => 'ada@example.com',
             'message' => 'We have bills for two sites.',
@@ -212,9 +233,118 @@ class CaldrenTest extends TestCase
         $this->get(route('home'))->assertOk()->assertSee('Your message was saved')->assertSee('hello@caldren.net');
     }
 
+    public function test_turnstile_widget_renders_on_both_contact_forms_login_and_registration(): void
+    {
+        config()->set('services.turnstile.site_key', 'test-site-key');
+
+        $home = $this->get(route('home'))->assertOk();
+        self::assertSame(2, substr_count($home->getContent(), 'class="cf-turnstile"'));
+
+        $this->get(route('login'))->assertOk()->assertSee('class="cf-turnstile"', false);
+        $this->get(route('register'))->assertOk()->assertSee('class="cf-turnstile"', false);
+    }
+
+    public function test_missing_turnstile_token_rejects_contact_without_saving_or_sending(): void
+    {
+        Mail::fake();
+        config()->set('services.turnstile.secret_key', 'test-secret-key');
+        Http::preventStrayRequests();
+
+        $this->post(route('contact.store'), [
+            'name' => 'Ada North',
+            'email' => 'ada@example.com',
+            'message' => 'Review demand patterns.',
+        ])->assertRedirect(route('home').'#contact')
+            ->assertSessionHasErrors(['turnstile']);
+
+        $this->assertDatabaseCount('contact_leads', 0);
+        Mail::assertNothingSent();
+    }
+
+    public function test_missing_turnstile_secret_rejects_registration_without_contacting_cloudflare(): void
+    {
+        config()->set('services.turnstile.secret_key', null);
+        Http::preventStrayRequests();
+
+        $this->post(route('register.store'), [
+            'name' => 'Ada North',
+            'email' => 'ada@example.com',
+            'organization' => 'North Estates',
+            'password' => 'very-long-secret',
+            'password_confirmation' => 'very-long-secret',
+            'cf-turnstile-response' => 'test-token',
+        ])->assertRedirect(route('register'))
+            ->assertSessionHasErrors(['turnstile']);
+
+        $this->assertGuest();
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('organizations', 0);
+    }
+
+    public function test_invalid_turnstile_token_rejects_login_without_authenticating(): void
+    {
+        $user = User::factory()->create(['password' => bcrypt('very-long-secret')]);
+        config()->set('services.turnstile.secret_key', '1x0000000000000000000000000000000AA');
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://challenges.cloudflare.com/turnstile/v0/siteverify' => Http::response(['success' => false, 'error-codes' => ['timeout-or-duplicate']], 200),
+        ]);
+
+        $this->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'very-long-secret',
+            'cf-turnstile-response' => 'expired-or-reused-token',
+        ])->assertRedirect(route('login'))
+            ->assertSessionHasErrors(['turnstile']);
+
+        $this->assertGuest();
+    }
+
+    public function test_turnstile_service_failure_rejects_registration_without_creating_an_account(): void
+    {
+        config()->set('services.turnstile.secret_key', '1x0000000000000000000000000000000AA');
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://challenges.cloudflare.com/turnstile/v0/siteverify' => Http::response(['success' => false], 503),
+        ]);
+
+        $this->post(route('register.store'), [
+            'name' => 'Ada North',
+            'email' => 'ada@example.com',
+            'organization' => 'North Estates',
+            'password' => 'very-long-secret',
+            'password_confirmation' => 'very-long-secret',
+            'cf-turnstile-response' => 'test-token',
+        ])->assertRedirect(route('register'))
+            ->assertSessionHasErrors(['turnstile']);
+
+        $this->assertGuest();
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('organizations', 0);
+    }
+
+    public function test_login_succeeds_after_cloudflare_verifies_the_token(): void
+    {
+        $user = User::factory()->create(['password' => bcrypt('very-long-secret')]);
+        $turnstile = $this->configureSuccessfulTurnstile();
+
+        $this->post(route('login.store'), $turnstile + [
+            'email' => $user->email,
+            'password' => 'very-long-secret',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticatedAs($user);
+        Http::assertSent(function ($request): bool {
+            return $request->url() === 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
+                && $request['secret'] === '1x0000000000000000000000000000000AA'
+                && $request['response'] === 'test-turnstile-token';
+        });
+    }
+
     public function test_signup_starts_trial_and_creates_workspace(): void
     {
-        $this->post('/register', ['name' => 'Ada North', 'email' => 'ada@example.com', 'organization' => 'North Estates', 'password' => 'very-long-secret', 'password_confirmation' => 'very-long-secret'])->assertRedirect('/dashboard');
+        $turnstile = $this->configureSuccessfulTurnstile();
+        $this->post('/register', $turnstile + ['name' => 'Ada North', 'email' => 'ada@example.com', 'organization' => 'North Estates', 'password' => 'very-long-secret', 'password_confirmation' => 'very-long-secret'])->assertRedirect('/dashboard');
         $this->assertAuthenticated();
         $this->assertDatabaseHas('organizations', ['name' => 'North Estates']);
         $organization = Organization::first();

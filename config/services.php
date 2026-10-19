@@ -6,6 +6,11 @@ return [
         'model' => env('OPENAI_MODEL', 'gpt-5.6-terra'),
     ],
 
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
