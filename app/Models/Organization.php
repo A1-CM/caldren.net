@@ -36,6 +36,24 @@ class Organization extends Model
         return $this->trial_ends_at->isFuture() || ($this->subscription?->status === 'active' && $this->subscription->current_period_ends_at?->isFuture());
     }
 
+    public function buildingLimit(): int
+    {
+        if ($this->trial_ends_at->isFuture()) {
+            return 50;
+        }
+
+        if ($this->subscription?->status === 'active' && $this->subscription->current_period_ends_at?->isFuture()) {
+            return (int) config('plans.'.$this->subscription->plan_key.'.building_limit', 0);
+        }
+
+        return 0;
+    }
+
+    public function canAddBuilding(): bool
+    {
+        return $this->buildings()->count() < $this->buildingLimit();
+    }
+
     public function accessStatus(): string
     {
         if ($this->subscription?->status === 'active' && $this->subscription->current_period_ends_at?->isFuture()) {

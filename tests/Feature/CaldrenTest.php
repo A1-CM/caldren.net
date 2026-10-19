@@ -34,6 +34,20 @@ class CaldrenTest extends TestCase
         }
     }
 
+    public function test_homepage_renders_all_illustrative_testimonials_and_manual_controls(): void
+    {
+        $this->get(route('home'))
+            ->assertSee('Sample statements for design preview only. These are not real customer testimonials.')
+            ->assertSee('A single view of readings and bills would make our weekly energy review easier to prepare.')
+            ->assertSee('Seeing the baseline beside an estimate would help our team ask better questions about a possible peak.')
+            ->assertSee('I want to compare buildings without losing the details that explain each site’s energy pattern.')
+            ->assertSee('Clear opportunities would give our facilities and finance teams a practical place to start a conversation.')
+            ->assertSee('data-testimonial-carousel', false)
+            ->assertSee('data-testimonial-select="0"', false)
+            ->assertSee('data-testimonial-next', false)
+            ->assertSee('Previous testimonial');
+    }
+
     public function test_previous_marketing_urls_redirect_to_home_sections(): void
     {
         $home = $this->get(route('home'))->assertOk();
@@ -98,8 +112,43 @@ class CaldrenTest extends TestCase
         $this->post('/register', ['name' => 'Ada North', 'email' => 'ada@example.com', 'organization' => 'North Estates', 'password' => 'very-long-secret', 'password_confirmation' => 'very-long-secret'])->assertRedirect('/dashboard');
         $this->assertAuthenticated();
         $this->assertDatabaseHas('organizations', ['name' => 'North Estates']);
-        $this->assertTrue(Organization::first()->trial_ends_at->isFuture());
+        $organization = Organization::first();
+        $this->assertTrue($organization->trial_ends_at->isFuture());
+        $this->assertNull($organization->subscription->plan_key);
+        $this->assertSame(50, $organization->buildingLimit());
         $this->assertDatabaseHas('organization_user', ['role' => 'owner']);
+    }
+
+    public function test_pricing_section_shows_the_trial_and_all_three_capacity_tiers(): void
+    {
+        $this->get(route('home'))
+            ->assertSee('30 days')
+            ->assertSee('No card required')
+            ->assertSee('up to 50 buildings')
+            ->assertSee('Site')
+            ->assertSee('$49')
+            ->assertSee('3 buildings')
+            ->assertSee('Portfolio')
+            ->assertSee('$99')
+            ->assertSee('10 buildings')
+            ->assertSee('Campus')
+            ->assertSee('$249')
+            ->assertSee('50 buildings')
+            ->assertSee('does not renew');
+    }
+
+    public function test_trial_workspace_can_add_its_fiftieth_building_but_not_a_fifty_first(): void
+    {
+        [$user, $organization] = $this->workspace();
+        for ($number = 1; $number <= 49; $number++) {
+            $organization->buildings()->create(['name' => 'Trial Site '.$number, 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15]);
+        }
+
+        $this->actingAs($user)->post(route('buildings.store'), ['name' => 'Trial Site 50', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15])->assertRedirect();
+        $this->assertSame(50, $organization->buildings()->count());
+        $this->assertDatabaseHas('buildings', ['organization_id' => $organization->id, 'name' => 'Trial Site 1']);
+        $this->actingAs($user)->post(route('buildings.store'), ['name' => 'Trial Site 51', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15])->assertSessionHasErrors('name');
+        $this->assertSame(50, $organization->buildings()->count());
     }
 
     public function test_building_routes_are_scoped_to_organization(): void
@@ -128,7 +177,11 @@ class CaldrenTest extends TestCase
         [$user,$organization] = $this->workspace();
         $organization->update(['trial_ends_at' => now()->subDay()]);
         $this->actingAs($user)->post(route('buildings.store'), ['name' => 'Tower A', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15])->assertSessionHasErrors('access');
-        $this->actingAs($user)->post(route('billing.demo'), ['demo_card' => '4242 4242 4242 4242'])->assertRedirect();
+        $this->actingAs($user)->get(route('billing'))->assertSee('Choose a demo plan')->assertSee('USD 49/month')->assertSee('up to 50 buildings');
+        $this->actingAs($user)->post(route('billing.demo'), ['demo_card' => '4242 4242 4242 4242', 'plan_key' => 'site'])->assertRedirect()->assertSessionHas('success');
+        $this->actingAs($user)->get(route('billing'))->assertSee('Site')->assertSee('$49')->assertSee('Up to 3 buildings');
+        $this->assertDatabaseHas('subscriptions', ['organization_id' => $organization->id, 'plan_key' => 'site', 'monthly_price_cents' => 4900, 'status' => 'active']);
+        $this->assertDatabaseHas('demo_payments', ['organization_id' => $organization->id, 'amount_cents' => 4900, 'status' => 'simulated']);
         $this->assertDatabaseCount('demo_payments', 1);
         $this->assertTrue($organization->fresh()->load('subscription')->hasAccess());
         $this->actingAs($user)->post(route('buildings.store'), ['name' => 'Tower A', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15])->assertRedirect();
@@ -190,10 +243,37 @@ class CaldrenTest extends TestCase
         $this->actingAs($teammate)->get(route('dashboard'))->assertOk()->assertSee($ownOrganization->name);
     }
 
+    public function test_selected_site_plan_preserves_existing_buildings_and_blocks_additions_over_three(): void
+    {
+        [$user, $organization] = $this->workspace();
+        $organization->update(['trial_ends_at' => now()->subDay()]);
+        for ($number = 1; $number <= 3; $number++) {
+            $organization->buildings()->create(['name' => 'Existing Site '.$number, 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15]);
+        }
+
+        $this->actingAs($user)->post(route('billing.demo'), ['demo_card' => '4242 4242 4242 4242', 'plan_key' => 'site'])->assertRedirect();
+        $this->actingAs($user)->post(route('buildings.store'), ['name' => 'Extra Site', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15])->assertSessionHasErrors('name');
+
+        $this->assertSame(3, $organization->buildings()->count());
+        $this->assertDatabaseHas('buildings', ['organization_id' => $organization->id, 'name' => 'Existing Site 1']);
+        $this->actingAs($user)->get(route('buildings.index'))->assertSee('Existing Site 1');
+    }
+
+    public function test_demo_checkout_rejects_an_unknown_plan_without_recording_payment(): void
+    {
+        [$user, $organization] = $this->workspace();
+        $organization->update(['trial_ends_at' => now()->subDay()]);
+
+        $this->actingAs($user)->post(route('billing.demo'), ['demo_card' => '4242 4242 4242 4242', 'plan_key' => 'unlimited'])->assertSessionHasErrors('plan_key');
+
+        $this->assertDatabaseCount('demo_payments', 0);
+        $this->assertDatabaseHas('subscriptions', ['organization_id' => $organization->id, 'status' => 'trialing']);
+    }
+
     public function test_demo_checkout_rejects_other_numbers(): void
     {
         [$user] = $this->workspace();
-        $this->actingAs($user)->post(route('billing.demo'), ['demo_card' => '4111 1111 1111 1111'])->assertSessionHasErrors('demo_card');
+        $this->actingAs($user)->post(route('billing.demo'), ['demo_card' => '4111 1111 1111 1111', 'plan_key' => 'portfolio'])->assertSessionHasErrors('demo_card');
         $this->assertDatabaseCount('demo_payments', 0);
     }
 

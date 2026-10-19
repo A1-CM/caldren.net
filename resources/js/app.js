@@ -49,6 +49,61 @@ window.addEventListener('resize', () => {
 const parallaxHero = document.querySelector('[data-scroll-parallax]');
 const parallaxLayers = parallaxHero ? [...parallaxHero.querySelectorAll('[data-parallax-speed]')] : [];
 const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+const testimonialCarousel = document.querySelector('[data-testimonial-carousel]');
+if (testimonialCarousel) {
+  const testimonialSlides = [...testimonialCarousel.querySelectorAll('[data-testimonial-slide]')];
+  const testimonialSelectors = [...testimonialCarousel.querySelectorAll('[data-testimonial-select]')];
+  const previousTestimonial = testimonialCarousel.querySelector('[data-testimonial-prev]');
+  const nextTestimonial = testimonialCarousel.querySelector('[data-testimonial-next]');
+  let activeTestimonialIndex = 0;
+
+  const showTestimonial = (requestedIndex) => {
+    activeTestimonialIndex = (requestedIndex + testimonialSlides.length) % testimonialSlides.length;
+
+    testimonialSlides.forEach((slide, index) => {
+      const isActive = index === activeTestimonialIndex;
+      slide.hidden = !isActive;
+      slide.setAttribute('aria-hidden', String(!isActive));
+      slide.classList.toggle('is-active', isActive);
+      slide.classList.remove('is-entering');
+
+      if (isActive && !reducedMotionQuery.matches) {
+        requestAnimationFrame(() => slide.classList.add('is-entering'));
+      }
+    });
+
+    testimonialSelectors.forEach((selector, index) => {
+      selector.setAttribute('aria-pressed', String(index === activeTestimonialIndex));
+    });
+  };
+
+  testimonialCarousel.classList.add('is-enhanced');
+  testimonialSelectors.forEach((selector) => {
+    selector.addEventListener('click', () => {
+      showTestimonial(Number(selector.dataset.testimonialSelect));
+    });
+  });
+  previousTestimonial?.addEventListener('click', () => showTestimonial(activeTestimonialIndex - 1));
+  nextTestimonial?.addEventListener('click', () => showTestimonial(activeTestimonialIndex + 1));
+  testimonialCarousel.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      showTestimonial(activeTestimonialIndex - 1);
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      showTestimonial(activeTestimonialIndex + 1);
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      showTestimonial(0);
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      showTestimonial(testimonialSlides.length - 1);
+    }
+  });
+
+  showTestimonial(activeTestimonialIndex);
+}
 let parallaxFrameQueued = false;
 
 const updateParallax = () => {

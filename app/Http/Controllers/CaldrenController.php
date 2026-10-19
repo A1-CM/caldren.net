@@ -84,9 +84,13 @@ class CaldrenController extends Controller
     public function createBuilding(Request $request)
     {
         $this->access($request);
+        $organization = $this->organization($request);
+        if (! $organization->canAddBuilding()) {
+            throw ValidationException::withMessages(['name' => 'Your workspace has reached its building limit. Review your plan or remove a building before adding another.']);
+        }
         $data = $request->validate(['name' => 'required|string|max:160', 'location' => 'nullable|string|max:160', 'timezone' => 'required|timezone', 'currency' => 'required|string|size:3', 'energy_rate' => 'required|numeric|min:0|max:100000', 'peak_rate' => 'nullable|numeric|min:0|max:100000', 'peak_start_hour' => 'nullable|integer|between:0,23', 'peak_end_hour' => 'nullable|integer|between:0,23']);
         $data['currency'] = strtoupper($data['currency']);
-        $building = $this->organization($request)->buildings()->create($data);
+        $building = $organization->buildings()->create($data);
 
         return redirect()->route('buildings.show', $building)->with('success', 'Building added.');
     }
@@ -182,24 +186,31 @@ class CaldrenController extends Controller
         $organization = $this->organization($request);
         $isOwner = $organization->users()->where('users.id', $request->user()->id)->wherePivot('role', 'owner')->exists();
         $payments = DB::table('demo_payments')->where('organization_id', $organization->id)->latest()->get();
+        $plans = config('plans');
+        $requestedPlan = $request->query('plan');
+        $selectedPlanKey = is_string($requestedPlan) && isset($plans[$requestedPlan]) ? $requestedPlan : $organization->subscription?->plan_key;
 
-        return view('dashboard.billing', compact('organization', 'payments', 'isOwner'));
+        return view('dashboard.billing', compact('organization', 'payments', 'isOwner', 'plans', 'selectedPlanKey'));
     }
 
     public function demoCheckout(Request $request)
     {
         $organization = $this->organization($request);
         abort_unless($organization->users()->where('users.id', $request->user()->id)->wherePivot('role', 'owner')->exists(), 403);
-        $data = $request->validate(['demo_card' => 'required|string']);
+        $data = $request->validate([
+            'demo_card' => 'required|string',
+            'plan_key' => ['required', 'string', 'in:'.implode(',', array_keys(config('plans')))],
+        ]);
         if (preg_replace('/\s+/', '', $data['demo_card']) !== '4242424242424242') {
             throw ValidationException::withMessages(['demo_card' => 'Use the displayed 4242 demo card number. No real cards are accepted.']);
         }
-        DB::transaction(function () use ($organization) {
+        $plan = config('plans.'.$data['plan_key']);
+        DB::transaction(function () use ($organization, $data, $plan) {
             $start = collect([$organization->trial_ends_at, $organization->subscription?->current_period_ends_at, now()])->filter()->sort()->last();
-            $organization->subscription()->updateOrCreate(['organization_id' => $organization->id], ['status' => 'active', 'monthly_price_cents' => 9900, 'current_period_ends_at' => $start->copy()->addMonth()]);
-            DB::table('demo_payments')->insert(['organization_id' => $organization->id, 'amount_cents' => 9900, 'currency' => 'USD', 'status' => 'simulated', 'demo_reference' => (string) Str::uuid(), 'created_at' => now(), 'updated_at' => now()]);
+            $organization->subscription()->updateOrCreate(['organization_id' => $organization->id], ['plan_key' => $data['plan_key'], 'status' => 'active', 'monthly_price_cents' => $plan['monthly_price_cents'], 'current_period_ends_at' => $start->copy()->addMonth()]);
+            DB::table('demo_payments')->insert(['organization_id' => $organization->id, 'amount_cents' => $plan['monthly_price_cents'], 'currency' => 'USD', 'status' => 'simulated', 'demo_reference' => (string) Str::uuid(), 'created_at' => now(), 'updated_at' => now()]);
         });
 
-        return back()->with('success', 'Demo payment simulated. Access is active for one month; no money was charged.');
+        return back()->with('success', 'Demo payment simulated for '.$plan['name'].'. Access is active for one month; no money was charged.');
     }
 }
