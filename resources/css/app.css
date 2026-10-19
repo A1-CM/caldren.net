@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
 @import '@fortawesome/fontawesome-free/css/solid.min.css';
+@import '@fortawesome/fontawesome-free/css/brands.min.css';
 @import '@fontsource-variable/dm-sans';
 @import '@fontsource/ibm-plex-mono/400.css';
 :root{--ink:#102A33;--deep:#0D252E;--teal:#0B8F7A;--teal-text:#087965;--mint:#DDF3EA;--amber:#E5A64A;--paper:#F7F8F3;--line:#DCE7E3;--muted:#62757B;--shadow:0 20px 70px rgba(16,42,51,.09)}
@@ -507,3 +508,7 @@
  .footer-bottom{display:flex;flex-direction:column;gap:7px;padding-top:17px}
 }
 @media(prefers-reduced-motion:reduce){.footer-contact-cta,.footer-link-group a{transition:none}.footer-contact-cta:hover{transform:none}}
+
+.oauth-options{margin-top:28px}.oauth-divider{display:flex;align-items:center;gap:13px;margin:0 0 18px;color:#77898c;font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.13em}.oauth-divider:before,.oauth-divider:after{content:"";height:1px;flex:1;background:#dce7e3}.oauth-options form{display:grid;gap:14px}.oauth-provider-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.oauth-provider-button{min-height:49px;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid #cbdad5;border-radius:9px;background:#fff;color:#183940;font-size:13px;font-weight:750;transition:background .15s ease,border-color .15s ease}.oauth-provider-button:hover{background:#f0f8f4;border-color:#76b9a7}.oauth-provider-button i{font-size:17px}.oauth-message{margin:0;padding:11px 13px;border:1px solid #e5b8b3;border-radius:9px;background:#fff0ee;color:#8b302c;font-size:12px;line-height:1.5}.oauth-complete-note{margin:0;color:#61767b;font-size:13px}.oauth-complete-card .turnstile-check{margin-block:6px}
+@media(max-width:480px){.oauth-provider-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.oauth-provider-button{transition:none}}

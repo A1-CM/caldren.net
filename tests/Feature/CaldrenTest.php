@@ -11,6 +11,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\User as SocialiteUser;
 use Tests\TestCase;
 
 class CaldrenTest extends TestCase
@@ -29,6 +31,19 @@ class CaldrenTest extends TestCase
         return ['cf-turnstile-response' => 'test-turnstile-token'];
     }
 
+    private function configureOAuthProvider(string $provider): void
+    {
+        config()->set("services.$provider.client_id", "$provider-client-id");
+        config()->set("services.$provider.client_secret", "$provider-client-secret");
+        config()->set("services.$provider.redirect", "http://localhost/auth/$provider/callback");
+    }
+
+    private function verifiedGoogleUser(string $id, string $email, ?string $name = 'OAuth Energy User'): SocialiteUser
+    {
+        return SocialiteUser::fake(['id' => $id, 'email' => $email, 'name' => $name])
+            ->setRaw(['sub' => $id, 'email' => $email, 'email_verified' => true, 'name' => $name]);
+    }
+
     private function workspace(): array
     {
         $user = User::factory()->create();
@@ -37,6 +52,211 @@ class CaldrenTest extends TestCase
         $organization->subscription()->create(['status' => 'trialing', 'monthly_price_cents' => 9900]);
 
         return [$user, $organization];
+    }
+
+    public function test_oauth_buttons_only_render_for_configured_providers(): void
+    {
+        config()->set('services.google.client_id', 'google-client');
+        config()->set('services.google.client_secret', 'google-secret');
+        config()->set('services.github.client_id', null);
+        config()->set('services.github.client_secret', null);
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('Continue with Google')
+            ->assertSee('fa-google', false)
+            ->assertDontSee('Continue with GitHub');
+
+        $this->get(route('register'))
+            ->assertOk()
+            ->assertSee('Continue with Google')
+            ->assertDontSee('Continue with GitHub');
+
+        config()->set('services.google.client_id', null);
+        config()->set('services.google.client_secret', null);
+        $this->get(route('login'))->assertDontSee('oauth-options', false);
+    }
+
+    public function test_oauth_start_requires_turnstile_before_redirecting_to_a_provider(): void
+    {
+        $this->configureOAuthProvider('google');
+        config()->set('services.turnstile.site_key', 'test-site-key');
+        config()->set('services.turnstile.secret_key', 'test-secret-key');
+        Http::preventStrayRequests();
+
+        $this->post(route('oauth.start'), ['provider' => 'google', 'origin' => 'register'])
+            ->assertRedirect(route('register'))
+            ->assertSessionHasErrors(['turnstile']);
+
+        $this->assertGuest();
+        $this->assertDatabaseCount('users', 0);
+    }
+
+    public function test_google_oauth_creates_a_site_trial_after_organization_setup(): void
+    {
+        $this->configureOAuthProvider('google');
+        $turnstile = $this->configureSuccessfulTurnstile();
+        Socialite::fake('google', $this->verifiedGoogleUser('google-123', 'energy@example.com', 'Alex Energy'));
+
+        $this->post(route('oauth.start'), $turnstile + ['provider' => 'google', 'origin' => 'register'])
+            ->assertRedirect('https://socialite.fake/google/authorize');
+        $this->get(route('oauth.callback', 'google'))->assertRedirect(route('oauth.complete'));
+        $this->get(route('oauth.complete'))->assertOk()->assertSee('Alex Energy')->assertSee('Set up your organization');
+
+        $turnstile = $this->configureSuccessfulTurnstile();
+        $this->post(route('oauth.finish'), $turnstile + ['organization' => 'Energy Operations Group'])
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticated();
+        $user = User::where('email', 'energy@example.com')->firstOrFail();
+        $this->assertSame('google-123', $user->google_id);
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertDatabaseHas('organizations', ['name' => 'Energy Operations Group']);
+        $organization = Organization::where('name', 'Energy Operations Group')->firstOrFail();
+        $this->assertSame('site', $organization->subscription->plan_key);
+        $this->assertSame('trialing', $organization->subscription->status);
+        $this->assertDatabaseHas('organization_user', ['organization_id' => $organization->id, 'user_id' => $user->id, 'role' => 'owner']);
+    }
+
+    public function test_github_oauth_links_a_verified_primary_email_to_an_existing_account(): void
+    {
+        $this->configureOAuthProvider('github');
+        $user = User::factory()->create(['email' => 'energy@example.com', 'github_id' => null]);
+        $turnstile = $this->configureSuccessfulTurnstile();
+        Socialite::fake('github', SocialiteUser::fake(['id' => 'github-789', 'email' => 'energy@example.com', 'name' => 'Alex Energy']));
+
+        $this->post(route('oauth.start'), $turnstile + ['provider' => 'github', 'origin' => 'login'])
+            ->assertRedirect('https://socialite.fake/github/authorize');
+        $this->get(route('oauth.callback', 'github'))->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'github_id' => 'github-789']);
+    }
+
+    public function test_unverified_google_email_cannot_register_an_oauth_account(): void
+    {
+        $this->configureOAuthProvider('google');
+        $turnstile = $this->configureSuccessfulTurnstile();
+        $providerUser = SocialiteUser::fake(['id' => 'google-unverified', 'email' => 'unverified@example.com']);
+        $providerUser->setRaw(['email' => 'unverified@example.com', 'email_verified' => false]);
+        Socialite::fake('google', $providerUser);
+
+        $this->post(route('oauth.start'), $turnstile + ['provider' => 'google', 'origin' => 'register'])
+            ->assertRedirect('https://socialite.fake/google/authorize');
+        $this->get(route('oauth.callback', 'google'))
+            ->assertRedirect(route('register'))
+            ->assertSessionHas('oauth_error');
+
+        $this->assertGuest();
+        $this->assertDatabaseCount('users', 0);
+    }
+
+    public function test_oauth_invitation_requires_a_matching_verified_email_and_joins_without_a_trial(): void
+    {
+        [$owner, $organization] = $this->workspace();
+        $token = 'oauth-invitation-token';
+        $invitation = Invitation::create([
+            'organization_id' => $organization->id,
+            'email' => 'invitee@example.com',
+            'token_hash' => hash('sha256', $token),
+            'expires_at' => now()->addDay(),
+        ]);
+        $this->configureOAuthProvider('google');
+        $turnstile = $this->configureSuccessfulTurnstile();
+        Socialite::fake('google', $this->verifiedGoogleUser('google-invitee', 'invitee@example.com'));
+
+        $this->post(route('oauth.start'), $turnstile + ['provider' => 'google', 'origin' => 'register', 'invite' => $token])
+            ->assertRedirect('https://socialite.fake/google/authorize');
+        $this->get(route('oauth.callback', 'google'))->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticated();
+        $invitee = User::where('email', 'invitee@example.com')->firstOrFail();
+        $this->assertDatabaseHas('organization_user', ['organization_id' => $organization->id, 'user_id' => $invitee->id, 'role' => 'member']);
+        $this->assertNotNull($invitation->fresh()->accepted_at);
+        $this->assertDatabaseCount('organizations', 1);
+        $this->assertDatabaseCount('subscriptions', 1);
+    }
+
+    public function test_oauth_invitation_rejects_a_different_verified_email(): void
+    {
+        [$owner, $organization] = $this->workspace();
+        $token = 'oauth-mismatched-invitation-token';
+        Invitation::create([
+            'organization_id' => $organization->id,
+            'email' => 'invited@example.com',
+            'token_hash' => hash('sha256', $token),
+            'expires_at' => now()->addDay(),
+        ]);
+        $this->configureOAuthProvider('google');
+        $turnstile = $this->configureSuccessfulTurnstile();
+        Socialite::fake('google', $this->verifiedGoogleUser('google-wrong-email', 'different@example.com'));
+
+        $this->post(route('oauth.start'), $turnstile + ['provider' => 'google', 'origin' => 'register', 'invite' => $token])
+            ->assertRedirect('https://socialite.fake/google/authorize');
+        $this->get(route('oauth.callback', 'google'))
+            ->assertRedirect(route('register'))
+            ->assertSessionHas('oauth_error');
+
+        $this->assertGuest();
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('organizations', 1);
+    }
+
+    public function test_oauth_workspace_creation_requires_a_fresh_turnstile_verification(): void
+    {
+        $this->configureOAuthProvider('google');
+        $turnstile = $this->configureSuccessfulTurnstile();
+        Socialite::fake('google', $this->verifiedGoogleUser('google-no-finish-token', 'new@example.com'));
+
+        $this->post(route('oauth.start'), $turnstile + ['provider' => 'google', 'origin' => 'register']);
+        $this->get(route('oauth.callback', 'google'))->assertRedirect(route('oauth.complete'));
+        $this->get(route('oauth.complete'))->assertOk();
+
+        config()->set('services.turnstile.site_key', 'test-site-key');
+        config()->set('services.turnstile.secret_key', 'test-secret-key');
+        Http::fake(['https://challenges.cloudflare.com/turnstile/v0/siteverify' => Http::response(['success' => false], 200)]);
+
+        $this->post(route('oauth.finish'), ['organization' => 'Energy Team'])
+            ->assertRedirect(route('oauth.complete'))
+            ->assertSessionHasErrors(['turnstile']);
+
+        $this->assertGuest();
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('organizations', 0);
+    }
+
+    public function test_oauth_rejects_provider_identity_conflicts_and_unavailable_emails(): void
+    {
+        $this->configureOAuthProvider('google');
+        $existingUser = User::factory()->create(['email' => 'energy@example.com', 'google_id' => 'another-google-id']);
+        $turnstile = $this->configureSuccessfulTurnstile();
+        Socialite::fake('google', $this->verifiedGoogleUser('google-conflict', 'energy@example.com'));
+        $this->post(route('oauth.start'), $turnstile + ['provider' => 'google', 'origin' => 'login']);
+
+        $this->get(route('oauth.callback', 'google'))
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('oauth_error');
+        $this->assertGuest();
+        $this->assertDatabaseHas('users', ['id' => $existingUser->id, 'google_id' => 'another-google-id']);
+
+        $this->configureOAuthProvider('github');
+        $turnstile = $this->configureSuccessfulTurnstile();
+        Socialite::fake('github', SocialiteUser::fake(['id' => 'github-no-email', 'email' => null]));
+        $this->post(route('oauth.start'), $turnstile + ['provider' => 'github', 'origin' => 'register']);
+        $this->get(route('oauth.callback', 'github'))->assertRedirect(route('register'))->assertSessionHas('oauth_error');
+        $this->assertDatabaseCount('users', 1);
+    }
+
+    public function test_oauth_callback_provider_error_returns_to_auth_form_without_creating_user(): void
+    {
+        $this->configureOAuthProvider('google');
+        $turnstile = $this->configureSuccessfulTurnstile();
+        Socialite::fake('google', fn () => throw new \RuntimeException('Provider unavailable'));
+        $this->post(route('oauth.start'), $turnstile + ['provider' => 'google', 'origin' => 'register']);
+
+        $this->get(route('oauth.callback', 'google'))->assertRedirect(route('register'))->assertSessionHas('oauth_error');
+        $this->assertGuest();
+        $this->assertDatabaseCount('users', 0);
     }
 
     public function test_public_and_account_pages_render_the_shared_observatory_footer(): void

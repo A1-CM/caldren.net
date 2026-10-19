@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AccountController;
+use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\CaldrenController;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,10 @@ Route::redirect('/terms', '/#terms', 301)->name('terms');
 Route::post('/contact', [CaldrenController::class, 'contact'])->middleware('throttle:5,1')->name('contact.store');
 Route::post('/contact/campus-sales', [CaldrenController::class, 'campusSalesInquiry'])->middleware('throttle:5,1')->name('contact.sales.store');
 Route::middleware('guest')->group(function () {
+    Route::post('/oauth/start', [OAuthController::class, 'start'])->middleware('throttle:5,1')->name('oauth.start');
+    Route::get('/auth/{provider}/callback', [OAuthController::class, 'callback'])->whereIn('provider', ['google', 'github'])->name('oauth.callback');
+    Route::get('/oauth/complete', [OAuthController::class, 'complete'])->name('oauth.complete');
+    Route::post('/oauth/complete', [OAuthController::class, 'finishRegistration'])->middleware('throttle:5,1')->name('oauth.finish');
     Route::get('/register', [AccountController::class, 'register'])->name('register');
     Route::post('/register', [AccountController::class, 'store'])->middleware('throttle:5,1')->name('register.store');
     Route::get('/login', [AccountController::class, 'login'])->name('login');
