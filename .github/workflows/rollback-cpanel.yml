@@ -1,0 +1,28 @@
+name: Roll back Caldren on cPanel
+on:
+  workflow_dispatch:
+    inputs:
+      steps_back:
+        description: Previous activated release to restore (1–7)
+        required: true
+        default: 1
+        type: number
+      public_dir:
+        description: auto, public_html, or a directory relative to cPanel home
+        default: auto
+        type: string
+permissions:
+  contents: read
+jobs:
+  rollback:
+    uses: A1-CM/.github/.github/workflows/laravel-cpanel-rollback-reusable.yml@v1.0.8
+    with:
+      toolkit_repository: A1-CM/.github
+      toolkit_ref: v1.0.8
+      project_slug: caldren
+      app_url: ${{ vars.APP_URL }}
+      cpanel_domain: ${{ vars.CPANEL_DOMAIN }}
+      public_dir: ${{ inputs.public_dir || vars.CPANEL_PUBLIC_DIR || 'auto' }}
+      health_path: ${{ vars.CPANEL_HEALTH_PATH || '/up' }}
+      steps_back: ${{ inputs.steps_back }}
+    secrets: inherit

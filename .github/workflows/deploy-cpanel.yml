@@ -1,0 +1,30 @@
+name: Deploy Caldren to cPanel
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      public_dir:
+        description: auto, public_html, or a directory relative to cPanel home
+        default: auto
+        type: string
+      allow_index_replace:
+        description: Replace an existing unrelated index.php in the selected document root
+        default: false
+        type: boolean
+permissions:
+  contents: read
+jobs:
+  deploy:
+    uses: A1-CM/.github/.github/workflows/laravel-cpanel-reusable.yml@v1.0.8
+    with:
+      toolkit_repository: A1-CM/.github
+      toolkit_ref: v1.0.8
+      project_slug: caldren
+      project_name: Caldren
+      app_url: ${{ vars.APP_URL }}
+      public_dir: ${{ inputs.public_dir || vars.CPANEL_PUBLIC_DIR || 'auto' }}
+      cpanel_domain: ${{ vars.CPANEL_DOMAIN }}
+      allow_index_replace: ${{ inputs.allow_index_replace || vars.CPANEL_ALLOW_INDEX_REPLACE == 'true' }}
+      health_path: ${{ vars.CPANEL_HEALTH_PATH || '/up' }}
+    secrets: inherit
