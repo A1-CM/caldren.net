@@ -1,10 +1,49 @@
 import { Chart, LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip } from 'chart.js';
 Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip);
 const menu = document.querySelector('[data-menu-toggle]');
+const header = menu?.closest('.console-header');
+const menuIcon = menu?.querySelector('i');
+const mainNavigation = document.getElementById('main-navigation');
+
+const closeMenu = () => {
+  if (!menu || !header || !menuIcon) {
+    return;
+  }
+
+  header.classList.remove('menu-open');
+  menu.setAttribute('aria-expanded', 'false');
+  menu.setAttribute('aria-label', 'Open menu');
+  menuIcon.classList.remove('fa-xmark');
+  menuIcon.classList.add('fa-bars');
+};
+
 menu?.addEventListener('click', () => {
-  const header = menu.closest('.site-header');
+  if (!header || !menuIcon) {
+    return;
+  }
+
   const open = header.classList.toggle('menu-open');
   menu.setAttribute('aria-expanded', String(open));
+  menu.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  menuIcon.classList.toggle('fa-bars', !open);
+  menuIcon.classList.toggle('fa-xmark', open);
+});
+
+mainNavigation?.querySelectorAll('a').forEach((link) => {
+  link.addEventListener('click', closeMenu);
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && menu?.getAttribute('aria-expanded') === 'true') {
+    closeMenu();
+    menu.focus();
+  }
+});
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 760) {
+    closeMenu();
+  }
 });
 const usageCanvas = document.getElementById('usage-chart');
 const usageData = document.getElementById('usage-chart-data');
