@@ -11,26 +11,22 @@
             <i class="fa-solid fa-bars" aria-hidden="true"></i>
         </button>
         <nav id="main-navigation" aria-label="Main navigation">
-            <a href="{{ route('product') }}" @if(request()->routeIs('product')) aria-current="page" @endif>Product</a>
+            <a href="{{ route('home') }}#about" data-section-link="about">About</a>
             <a href="{{ route('home') }}#how-it-works" data-section-link="how-it-works">How it works</a>
             <a href="{{ route('home') }}#pricing" data-section-link="pricing">Pricing</a>
             <a href="{{ route('home') }}#contact" data-section-link="contact">Contact</a>
             <div class="console-mobile-actions">
                 @auth
                     <a href="{{ route('dashboard') }}"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Dashboard</a>
-                @else
-                    <a href="{{ route('login') }}"><i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i> Sign in</a>
-                    <a class="console-mobile-cta" href="{{ route('register') }}"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Start free trial</a>
                 @endauth
+                <a class="console-mobile-cta" href="{{ route('product') }}" @if(request()->routeIs('product')) aria-current="page" @endif><i class="fa-solid fa-wave-square" aria-hidden="true"></i> Explore the product</a>
             </div>
         </nav>
         <div class="console-header-actions">
             @auth
                 <a class="console-dashboard-link" href="{{ route('dashboard') }}"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Dashboard</a>
-            @else
-                <a class="console-signin-link" href="{{ route('login') }}">Sign in</a>
-                <a class="console-trial-link" href="{{ route('register') }}">Start free trial <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
             @endauth
+            <a class="console-trial-link" href="{{ route('product') }}" @if(request()->routeIs('product')) aria-current="page" @endif>Explore the product <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
         </div>
     </div>
     <svg class="console-waveform" viewBox="0 0 1440 20" preserveAspectRatio="none" aria-hidden="true"><path d="M0 12h245l12-5 10 10 14-13 12 8 10-4h160l10-3 12 7 12-10 13 9 12-4h260l12-6 13 12 12-15 12 10 13-4h280l12-5 12 10 14-12 12 7 12-4h240" /></svg>

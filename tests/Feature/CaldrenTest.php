@@ -259,6 +259,22 @@ class CaldrenTest extends TestCase
         $this->assertDatabaseCount('users', 0);
     }
 
+    public function test_public_navigation_and_marketing_heroes_prioritize_the_product(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('href="'.route('home').'#about"', false)
+            ->assertSee('class="console-trial-link" href="'.route('product').'"', false)
+            ->assertDontSee('console-signin-link', false)
+            ->assertSee('class="button" href="'.route('product').'">Explore the product</a>', false)
+            ->assertSee('class="obs-outline-button" href="'.route('register').'">Start Site trial</a>', false);
+
+        $this->get(route('product'))
+            ->assertOk()
+            ->assertSee('class="button" href="'.route('register').'">Start your 30-day trial</a>', false)
+            ->assertSee('class="obs-outline-button" href="'.route('login').'">Sign in</a>', false);
+    }
+
     public function test_public_and_account_pages_render_the_shared_observatory_footer(): void
     {
         foreach (['/', '/product', '/register', '/login', '/forgot-password', '/reset-password/footer-preview-token'] as $url) {
