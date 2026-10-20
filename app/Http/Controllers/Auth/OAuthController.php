@@ -21,10 +21,9 @@ use Throwable;
 
 class OAuthController extends Controller
 {
-    public function start(Request $request, TurnstileVerifier $turnstile): RedirectResponse
+    public function start(Request $request): RedirectResponse
     {
         $origin = $request->input('origin') === 'register' ? 'register' : 'login';
-        $turnstile->verify($request, 'default', route($origin));
 
         $data = $request->validate([
             'provider' => 'required|in:google,github',

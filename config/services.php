@@ -1,5 +1,16 @@
 <?php
 
+$appUrl = rtrim((string) env('APP_URL', 'http://localhost'), '/');
+$callbackUrl = static function (string $environmentKey, string $path) use ($appUrl): string {
+    $configuredUrl = env($environmentKey);
+
+    if (! is_string($configuredUrl) || $configuredUrl === '' || str_contains($configuredUrl, '${APP_URL}')) {
+        return $appUrl.$path;
+    }
+
+    return $configuredUrl;
+};
+
 return [
     'groq' => [
         'key' => env('GROQ_API_KEY'),
@@ -23,13 +34,13 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI', rtrim(env('APP_URL', 'http://localhost'), '/').'/auth/google/callback'),
+        'redirect' => $callbackUrl('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
     ],
 
     'github' => [
         'client_id' => env('GITHUB_CLIENT_ID'),
         'client_secret' => env('GITHUB_CLIENT_SECRET'),
-        'redirect' => env('GITHUB_REDIRECT_URI', rtrim(env('APP_URL', 'http://localhost'), '/').'/auth/github/callback'),
+        'redirect' => $callbackUrl('GITHUB_REDIRECT_URI', '/auth/github/callback'),
     ],
 
     /*

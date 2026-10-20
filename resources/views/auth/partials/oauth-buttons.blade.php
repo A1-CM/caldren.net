@@ -14,7 +14,6 @@
             @if (! empty($inviteToken))
                 <input type="hidden" name="invite" value="{{ $inviteToken }}">
             @endif
-            @include('components.turnstile')
             <div class="oauth-provider-grid">
                 @if ($googleOAuthConfigured)
                     <button class="oauth-provider-button" type="submit" name="provider" value="google"><i class="fa-brands fa-google" aria-hidden="true"></i><span>Continue with Google</span></button>

@@ -1,5 +1,33 @@
 import { Chart, LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip } from 'chart.js';
 Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip);
+
+const passwordStrengthInput = document.querySelector('[data-password-strength-input]');
+const passwordStrengthMeter = document.querySelector('[data-password-strength-meter]');
+const passwordStrengthBar = document.querySelector('[data-password-strength-bar]');
+const passwordStrengthLabel = document.querySelector('[data-password-strength-label]');
+
+if (passwordStrengthInput instanceof HTMLInputElement && passwordStrengthMeter && passwordStrengthBar && passwordStrengthLabel) {
+  const strengthLabels = ['Enter a password', 'Very weak', 'Weak', 'Fair', 'Good', 'Strong'];
+
+  passwordStrengthInput.addEventListener('input', () => {
+    const password = passwordStrengthInput.value;
+    const checks = [
+      password.length >= 12,
+      password.length >= 16,
+      /[a-z]/.test(password) && /[A-Z]/.test(password),
+      /\d/.test(password),
+      /[^A-Za-z0-9]/.test(password),
+    ];
+    const score = password.length === 0 ? 0 : checks.filter(Boolean).length;
+    const label = strengthLabels[score];
+
+    passwordStrengthMeter.setAttribute('aria-valuenow', String(score));
+    passwordStrengthMeter.setAttribute('aria-valuetext', label);
+    passwordStrengthMeter.dataset.strength = String(score);
+    passwordStrengthBar.style.width = `${score * 20}%`;
+    passwordStrengthLabel.textContent = label;
+  });
+}
 const menu = document.querySelector('[data-menu-toggle]');
 const header = menu?.closest('.console-header');
 const menuIcon = menu?.querySelector('i');

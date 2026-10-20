@@ -82,16 +82,17 @@ class CaldrenTest extends TestCase
         $this->get(route('login'))->assertDontSee('oauth-options', false);
     }
 
-    public function test_oauth_start_requires_turnstile_before_redirecting_to_a_provider(): void
+    public function test_oauth_start_does_not_require_turnstile_for_google_or_github(): void
     {
-        $this->configureOAuthProvider('google');
-        config()->set('services.turnstile.site_key', 'test-site-key');
-        config()->set('services.turnstile.secret_key', 'test-secret-key');
         Http::preventStrayRequests();
 
-        $this->post(route('oauth.start'), ['provider' => 'google', 'origin' => 'register'])
-            ->assertRedirect(route('register'))
-            ->assertSessionHasErrors(['turnstile']);
+        foreach (['google', 'github'] as $provider) {
+            $this->configureOAuthProvider($provider);
+            Socialite::fake($provider);
+
+            $this->post(route('oauth.start'), ['provider' => $provider, 'origin' => 'login'])
+                ->assertRedirect("https://socialite.fake/{$provider}/authorize");
+        }
 
         $this->assertGuest();
         $this->assertDatabaseCount('users', 0);
@@ -100,10 +101,9 @@ class CaldrenTest extends TestCase
     public function test_google_oauth_creates_a_site_trial_after_organization_setup(): void
     {
         $this->configureOAuthProvider('google');
-        $turnstile = $this->configureSuccessfulTurnstile();
         Socialite::fake('google', $this->verifiedGoogleUser('google-123', 'energy@example.com', 'Alex Energy'));
 
-        $this->post(route('oauth.start'), $turnstile + ['provider' => 'google', 'origin' => 'register'])
+        $this->post(route('oauth.start'), ['provider' => 'google', 'origin' => 'register'])
             ->assertRedirect('https://socialite.fake/google/authorize');
         $this->get(route('oauth.callback', 'google'))->assertRedirect(route('oauth.complete'));
         $this->get(route('oauth.complete'))->assertOk()->assertSee('Alex Energy')->assertSee('Set up your organization');
@@ -127,10 +127,9 @@ class CaldrenTest extends TestCase
     {
         $this->configureOAuthProvider('github');
         $user = User::factory()->create(['email' => 'energy@example.com', 'github_id' => null]);
-        $turnstile = $this->configureSuccessfulTurnstile();
         Socialite::fake('github', SocialiteUser::fake(['id' => 'github-789', 'email' => 'energy@example.com', 'name' => 'Alex Energy']));
 
-        $this->post(route('oauth.start'), $turnstile + ['provider' => 'github', 'origin' => 'login'])
+        $this->post(route('oauth.start'), ['provider' => 'github', 'origin' => 'login'])
             ->assertRedirect('https://socialite.fake/github/authorize');
         $this->get(route('oauth.callback', 'github'))->assertRedirect(route('dashboard'));
 
@@ -141,12 +140,11 @@ class CaldrenTest extends TestCase
     public function test_unverified_google_email_cannot_register_an_oauth_account(): void
     {
         $this->configureOAuthProvider('google');
-        $turnstile = $this->configureSuccessfulTurnstile();
         $providerUser = SocialiteUser::fake(['id' => 'google-unverified', 'email' => 'unverified@example.com']);
         $providerUser->setRaw(['email' => 'unverified@example.com', 'email_verified' => false]);
         Socialite::fake('google', $providerUser);
 
-        $this->post(route('oauth.start'), $turnstile + ['provider' => 'google', 'origin' => 'register'])
+        $this->post(route('oauth.start'), ['provider' => 'google', 'origin' => 'register'])
             ->assertRedirect('https://socialite.fake/google/authorize');
         $this->get(route('oauth.callback', 'google'))
             ->assertRedirect(route('register'))
@@ -167,10 +165,9 @@ class CaldrenTest extends TestCase
             'expires_at' => now()->addDay(),
         ]);
         $this->configureOAuthProvider('google');
-        $turnstile = $this->configureSuccessfulTurnstile();
         Socialite::fake('google', $this->verifiedGoogleUser('google-invitee', 'invitee@example.com'));
 
-        $this->post(route('oauth.start'), $turnstile + ['provider' => 'google', 'origin' => 'register', 'invite' => $token])
+        $this->post(route('oauth.start'), ['provider' => 'google', 'origin' => 'register', 'invite' => $token])
             ->assertRedirect('https://socialite.fake/google/authorize');
         $this->get(route('oauth.callback', 'google'))->assertRedirect(route('dashboard'));
 
@@ -193,10 +190,9 @@ class CaldrenTest extends TestCase
             'expires_at' => now()->addDay(),
         ]);
         $this->configureOAuthProvider('google');
-        $turnstile = $this->configureSuccessfulTurnstile();
         Socialite::fake('google', $this->verifiedGoogleUser('google-wrong-email', 'different@example.com'));
 
-        $this->post(route('oauth.start'), $turnstile + ['provider' => 'google', 'origin' => 'register', 'invite' => $token])
+        $this->post(route('oauth.start'), ['provider' => 'google', 'origin' => 'register', 'invite' => $token])
             ->assertRedirect('https://socialite.fake/google/authorize');
         $this->get(route('oauth.callback', 'google'))
             ->assertRedirect(route('register'))
@@ -210,10 +206,9 @@ class CaldrenTest extends TestCase
     public function test_oauth_workspace_creation_requires_a_fresh_turnstile_verification(): void
     {
         $this->configureOAuthProvider('google');
-        $turnstile = $this->configureSuccessfulTurnstile();
         Socialite::fake('google', $this->verifiedGoogleUser('google-no-finish-token', 'new@example.com'));
 
-        $this->post(route('oauth.start'), $turnstile + ['provider' => 'google', 'origin' => 'register']);
+        $this->post(route('oauth.start'), ['provider' => 'google', 'origin' => 'register']);
         $this->get(route('oauth.callback', 'google'))->assertRedirect(route('oauth.complete'));
         $this->get(route('oauth.complete'))->assertOk();
 
@@ -234,9 +229,8 @@ class CaldrenTest extends TestCase
     {
         $this->configureOAuthProvider('google');
         $existingUser = User::factory()->create(['email' => 'energy@example.com', 'google_id' => 'another-google-id']);
-        $turnstile = $this->configureSuccessfulTurnstile();
         Socialite::fake('google', $this->verifiedGoogleUser('google-conflict', 'energy@example.com'));
-        $this->post(route('oauth.start'), $turnstile + ['provider' => 'google', 'origin' => 'login']);
+        $this->post(route('oauth.start'), ['provider' => 'google', 'origin' => 'login']);
 
         $this->get(route('oauth.callback', 'google'))
             ->assertRedirect(route('login'))
@@ -245,9 +239,8 @@ class CaldrenTest extends TestCase
         $this->assertDatabaseHas('users', ['id' => $existingUser->id, 'google_id' => 'another-google-id']);
 
         $this->configureOAuthProvider('github');
-        $turnstile = $this->configureSuccessfulTurnstile();
         Socialite::fake('github', SocialiteUser::fake(['id' => 'github-no-email', 'email' => null]));
-        $this->post(route('oauth.start'), $turnstile + ['provider' => 'github', 'origin' => 'register']);
+        $this->post(route('oauth.start'), ['provider' => 'github', 'origin' => 'register']);
         $this->get(route('oauth.callback', 'github'))->assertRedirect(route('register'))->assertSessionHas('oauth_error');
         $this->assertDatabaseCount('users', 1);
     }
@@ -255,9 +248,8 @@ class CaldrenTest extends TestCase
     public function test_oauth_callback_provider_error_returns_to_auth_form_without_creating_user(): void
     {
         $this->configureOAuthProvider('google');
-        $turnstile = $this->configureSuccessfulTurnstile();
         Socialite::fake('google', fn () => throw new \RuntimeException('Provider unavailable'));
-        $this->post(route('oauth.start'), $turnstile + ['provider' => 'google', 'origin' => 'register']);
+        $this->post(route('oauth.start'), ['provider' => 'google', 'origin' => 'register']);
 
         $this->get(route('oauth.callback', 'google'))->assertRedirect(route('register'))->assertSessionHas('oauth_error');
         $this->assertGuest();
@@ -495,13 +487,23 @@ class CaldrenTest extends TestCase
 
     public function test_turnstile_widget_renders_on_both_contact_forms_login_and_registration(): void
     {
+        config()->set('services.google.client_id', 'google-client');
+        config()->set('services.google.client_secret', 'google-secret');
+        config()->set('services.github.client_id', 'github-client');
+        config()->set('services.github.client_secret', 'github-secret');
         config()->set('services.turnstile.site_key', 'test-site-key');
 
         $home = $this->get(route('home'))->assertOk();
         self::assertSame(2, substr_count($home->getContent(), 'class="cf-turnstile"'));
 
-        $this->get(route('login'))->assertOk()->assertSee('class="cf-turnstile"', false);
-        $this->get(route('register'))->assertOk()->assertSee('class="cf-turnstile"', false);
+        $login = $this->get(route('login'))->assertOk()->assertSee('class="cf-turnstile"', false);
+        $register = $this->get(route('register'))->assertOk()->assertSee('class="cf-turnstile"', false);
+        self::assertStringNotContainsString('cf-turnstile', substr($login->getContent(), strpos($login->getContent(), 'class="oauth-options"')));
+        self::assertStringNotContainsString('cf-turnstile', substr($register->getContent(), strpos($register->getContent(), 'class="oauth-options"')));
+        $register->assertSee('data-password-strength-input', false)
+            ->assertSee('role="meter"', false)
+            ->assertSee('data-password-strength-label', false);
+        $login->assertDontSee('data-password-strength-input', false);
     }
 
     public function test_missing_turnstile_token_rejects_contact_without_saving_or_sending(): void
