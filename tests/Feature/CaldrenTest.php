@@ -342,25 +342,29 @@ class CaldrenTest extends TestCase
         $this->assertSame(1, substr_count($productMain[1] ?? '', '<img '));
     }
 
-    public function test_homepage_about_section_renders_social_and_company_profile_pills(): void
+    public function test_homepage_about_section_shows_company_profiles_and_footer_has_social_links(): void
     {
         $home = $this->get(route('home'))->assertOk();
+        preg_match('/<div id="about".*?<\/div>/s', $home->getContent(), $aboutSection);
+        $aboutContent = $aboutSection[0] ?? '';
 
-        foreach ([
-            'https://medium.com/@caldren.net',
-            'https://www.facebook.com/CaldrenSolutions/',
-            'https://www.youtube.com/@CaldrenSolutions',
-            'https://www.linkedin.com/company/caldren-solutions/',
-            'https://www.crunchbase.com/organization/caldren-solutions',
-            'https://www.f6s.com/caldren-solutions',
-        ] as $profileUrl) {
-            $home->assertSee('href="'.$profileUrl.'" target="_blank" rel="noopener noreferrer"', false);
-        }
+        self::assertStringContainsString('aria-label="Caldren company profiles"', $aboutContent);
+        self::assertStringContainsString('https://www.crunchbase.com/organization/caldren-solutions', $aboutContent);
+        self::assertStringContainsString('https://www.f6s.com/caldren-solutions', $aboutContent);
+        self::assertStringNotContainsString('medium.com', $aboutContent);
+        self::assertStringNotContainsString('facebook.com', $aboutContent);
+        self::assertStringNotContainsString('youtube.com', $aboutContent);
+        self::assertStringNotContainsString('linkedin.com', $aboutContent);
 
-        $home->assertSee('aria-label="Caldren social channels and company profiles"', false)
-            ->assertSee('https://www.google.com/s2/favicons?domain=linkedin.com&sz=64', false)
-            ->assertSee('https://www.google.com/s2/favicons?domain=crunchbase.com&sz=64', false)
-            ->assertSee('https://www.google.com/s2/favicons?domain=f6s.com&sz=64', false);
+        $home->assertSee('aria-label="Caldren social media"', false)
+            ->assertSee('href="https://medium.com/@caldren.net" target="_blank" rel="noopener noreferrer"', false)
+            ->assertSee('href="https://www.facebook.com/CaldrenSolutions/" target="_blank" rel="noopener noreferrer"', false)
+            ->assertSee('href="https://www.youtube.com/@CaldrenSolutions" target="_blank" rel="noopener noreferrer"', false)
+            ->assertSee('href="https://www.linkedin.com/company/caldren-solutions/" target="_blank" rel="noopener noreferrer"', false)
+            ->assertSee('https://www.google.com/s2/favicons?domain=medium.com&sz=64', false)
+            ->assertSee('https://www.google.com/s2/favicons?domain=facebook.com&sz=64', false)
+            ->assertSee('https://www.google.com/s2/favicons?domain=youtube.com&sz=64', false)
+            ->assertSee('https://www.google.com/s2/favicons?domain=linkedin.com&sz=64', false);
     }
 
     public function test_previous_marketing_urls_redirect_to_home_sections(): void
@@ -645,8 +649,8 @@ class CaldrenTest extends TestCase
 
     public function test_pricing_shows_a_site_trial_portfolio_subscription_and_campus_sales_dialog(): void
     {
-        $this->get(route('home'))
-            ->assertSee('30 days')
+        $response = $this->get(route('home'));
+        $response->assertSee('30 days')
             ->assertSee('No card required')
             ->assertSee('up to 3 buildings')
             ->assertSee('Site')
@@ -664,6 +668,11 @@ class CaldrenTest extends TestCase
             ->assertDontSee('$249')
             ->assertDontSee('DEMO CHECKOUT / NO REAL PAYMENT')
             ->assertSee('Portfolio activation is currently a demo checkout');
+        preg_match_all('/<article class="tier-card tier-card-[^"]+".*?<\/article>/s', $response->getContent(), $tierCards);
+        $this->assertCount(3, $tierCards[0]);
+        foreach ($tierCards[0] as $tierCard) {
+            self::assertStringNotContainsString('<img ', $tierCard);
+        }
     }
 
     public function test_trial_workspace_can_add_its_third_building_but_not_a_fourth(): void

@@ -61,6 +61,15 @@
                 <a href="{{ route('home') }}#privacy">Privacy</a>
                 <a href="{{ route('home') }}#terms">Terms</a>
             </nav>
+            <nav class="footer-link-group footer-social-group" aria-label="Caldren social media">
+                <h3>Follow</h3>
+                <div class="footer-social-links">
+                    <a class="footer-social-link" href="https://medium.com/@caldren.net" target="_blank" rel="noopener noreferrer"><img src="https://www.google.com/s2/favicons?domain=medium.com&sz=64" alt="" width="18" height="18" loading="lazy" referrerpolicy="no-referrer"><span>Medium</span></a>
+                    <a class="footer-social-link" href="https://www.facebook.com/CaldrenSolutions/" target="_blank" rel="noopener noreferrer"><img src="https://www.google.com/s2/favicons?domain=facebook.com&sz=64" alt="" width="18" height="18" loading="lazy" referrerpolicy="no-referrer"><span>Facebook</span></a>
+                    <a class="footer-social-link" href="https://www.youtube.com/@CaldrenSolutions" target="_blank" rel="noopener noreferrer"><img src="https://www.google.com/s2/favicons?domain=youtube.com&sz=64" alt="" width="18" height="18" loading="lazy" referrerpolicy="no-referrer"><span>YouTube</span></a>
+                    <a class="footer-social-link" href="https://www.linkedin.com/company/caldren-solutions/" target="_blank" rel="noopener noreferrer"><img src="https://www.google.com/s2/favicons?domain=linkedin.com&sz=64" alt="" width="18" height="18" loading="lazy" referrerpolicy="no-referrer"><span>LinkedIn</span></a>
+                </div>
+            </nav>
             <div class="footer-bottom"><span>© {{ date('Y') }} Caldren</span><span>Built to support clearer energy decisions.</span></div>
         </div>
     </div>

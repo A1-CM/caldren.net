@@ -5,7 +5,7 @@
 <div class="tier-intro" data-reveal><span class="eyebrow">SAME ENERGY TOOLKIT / CHOOSE YOUR CAPACITY</span><p>Both self-serve plans include all current features and unlimited team seats. Campus portfolios can request a tailored conversation.</p></div>
 <div class="tier-grid">
 @foreach(config('plans') as $key => $plan)
-<article class="tier-card tier-card-{{ $key }}" data-reveal style="--tier-order: {{ $loop->index }}"><div class="tier-photo"><img src="{{ asset('images/caldren-building-dusk.webp') }}" alt="" loading="lazy" width="1536" height="1024" data-scene-image><span class="tier-number">0{{ $loop->iteration }} / CALDREN PLAN</span><span class="tier-plan-name">{{ $plan['name'] }}</span></div>
+<article class="tier-card tier-card-{{ $key }}" aria-labelledby="tier-plan-{{ $key }}" data-reveal style="--tier-order: {{ $loop->index }}"><div class="tier-card-heading"><span class="tier-number">0{{ $loop->iteration }} / CALDREN PLAN</span><h3 id="tier-plan-{{ $key }}" class="tier-plan-name">{{ $plan['name'] }}</h3></div>
 <div class="tier-card-body">
 @if($key === 'campus')
 <p class="tier-cap">Custom portfolio <span>scope</span></p><div class="tier-price tier-price-sales">Contact sales</div><p class="tier-description">Discuss your portfolio, energy data, and goals with the Caldren team.</p>
