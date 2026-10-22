@@ -309,13 +309,18 @@ class CaldrenTest extends TestCase
     {
         $this->get(route('home'))
             ->assertSee('AI ENERGY INTELLIGENCE FOR BUILDINGS')
-            ->assertSee('See tomorrow’s energy demand.')
-            ->assertSee('Make better decisions today.')
-            ->assertSee('ENERGY SIGNALS TO DECISIONS')
-            ->assertSee('Where is there an opportunity to review?')
-            ->assertSee('Caldren supports optimization decisions; your team remains in control.')
-            ->assertSee('USD 49/month')
-            ->assertSee('USD 99/month')
+            ->assertSee('Powering Smarter Energy Decisions')
+            ->assertSee('Through Predictive Intelligence.')
+            ->assertSee('Connecting Energy Intelligence')
+            ->assertSee('to a Smarter, More Resilient Future.')
+            ->assertSee('We unify energy assets, forecasting insights, and optimization scenarios')
+            ->assertSee('How Do You Bring Every Energy Asset Into One View?')
+            ->assertSee('How Can You Turn Forecasts Into Meaningful Insights?')
+            ->assertSee('How Do You Turn Energy Insights Into Better Decisions?')
+            ->assertSee('Caldren gives teams a structured way to review storage dispatch, load shifting, and procurement scenarios.')
+            ->assertSee('Your team reviews and approves recommendations with a clear history.')
+            ->assertSee('$49')
+            ->assertSee('$99')
             ->assertSee('Contact sales')
             ->assertDontSee('$249')
             ->assertSee('no card details are stored');
@@ -335,6 +340,27 @@ class CaldrenTest extends TestCase
             ->assertSee('No 3D or BIM import');
         preg_match('/<main id="main-content"[^>]*>(.*?)<\/main>/s', $product->getContent(), $productMain);
         $this->assertSame(1, substr_count($productMain[1] ?? '', '<img '));
+    }
+
+    public function test_homepage_about_section_renders_social_and_company_profile_pills(): void
+    {
+        $home = $this->get(route('home'))->assertOk();
+
+        foreach ([
+            'https://medium.com/@caldren.net',
+            'https://www.facebook.com/CaldrenSolutions/',
+            'https://www.youtube.com/@CaldrenSolutions',
+            'https://www.linkedin.com/company/caldren-solutions/',
+            'https://www.crunchbase.com/organization/caldren-solutions',
+            'https://www.f6s.com/caldren-solutions',
+        ] as $profileUrl) {
+            $home->assertSee('href="'.$profileUrl.'" target="_blank" rel="noopener noreferrer"', false);
+        }
+
+        $home->assertSee('aria-label="Caldren social channels and company profiles"', false)
+            ->assertSee('https://www.google.com/s2/favicons?domain=linkedin.com&sz=64', false)
+            ->assertSee('https://www.google.com/s2/favicons?domain=crunchbase.com&sz=64', false)
+            ->assertSee('https://www.google.com/s2/favicons?domain=f6s.com&sz=64', false);
     }
 
     public function test_previous_marketing_urls_redirect_to_home_sections(): void
