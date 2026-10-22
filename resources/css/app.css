@@ -268,6 +268,7 @@
 .console-header nav>a[aria-current="location"]{color:#fff;text-decoration:underline;text-decoration-color:#38d6ad;text-underline-offset:10px;text-decoration-thickness:2px}
 .scroll-story{background:#f7f8f3}
 .story-section{padding-block:110px}
+.about-social-pills{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin:24px auto 0}.about-social-pill{display:inline-flex;align-items:center;gap:9px;min-height:42px;padding:8px 14px;border:1px solid rgba(16,42,51,.14);border-radius:999px;background:rgba(255,255,255,.76);color:#183940;font-size:13px;font-weight:750;box-shadow:0 6px 18px rgba(16,42,51,.06);transition:transform .18s ease,border-color .18s ease,background-color .18s ease}.about-social-pill:hover{transform:translateY(-2px);border-color:#76b9a7;background:#fff;color:#087965}.about-social-pill img{display:block;width:20px;height:20px;border-radius:50%;object-fit:cover;background:#fff}.about-social-pill:focus-visible{outline:3px solid #30b99f;outline-offset:3px}@media(prefers-reduced-motion:reduce){.about-social-pill{transition:none}.about-social-pill:hover{transform:none}}
 .story-heading{max-width:820px;margin:0 auto 70px;text-align:center}
 .story-heading h2,.story-close h2{font-size:clamp(36px,4.8vw,66px);line-height:1.08;margin:20px 0;text-wrap:balance}
 .story-heading p{max-width:650px;margin-inline:auto;color:#53686d;font-size:17px}
