@@ -272,9 +272,9 @@ class CaldrenTest extends TestCase
             ->assertSee('class="obs-outline-button" href="'.route('login').'">Sign in</a>', false);
     }
 
-    public function test_public_and_account_pages_render_the_shared_observatory_footer(): void
+    public function test_public_pages_keep_the_observatory_footer_and_account_pages_use_a_minimal_frame(): void
     {
-        foreach (['/', '/product', '/register', '/login', '/forgot-password', '/reset-password/footer-preview-token'] as $url) {
+        foreach (['/', '/product'] as $url) {
             $this->get($url)
                 ->assertOk()
                 ->assertSee('footer-contact-band', false)
@@ -287,6 +287,21 @@ class CaldrenTest extends TestCase
                 ->assertSee('href="'.route('home').'#contact"', false)
                 ->assertSee('href="'.route('home').'#privacy"', false)
                 ->assertSee('href="'.route('home').'#terms"', false);
+        }
+
+        foreach (['/register', '/login', '/forgot-password', '/reset-password/footer-preview-token'] as $url) {
+            $this->get($url)
+                ->assertOk()
+                ->assertSee('class="auth-header"', false)
+                ->assertSee('aria-label="Back to Caldren home"', false)
+                ->assertSee('class="auth-brand-tile"', false)
+                ->assertSee('src="'.asset('images/logo.webp').'"', false)
+                ->assertSee('class="auth-contact-link"', false)
+                ->assertSee('class="auth-footer"', false)
+                ->assertSee('href="'.route('home').'#privacy"', false)
+                ->assertSee('href="'.route('home').'#terms"', false)
+                ->assertDontSee('footer-contact-band', false)
+                ->assertDontSee('class="console-header"', false);
         }
     }
 

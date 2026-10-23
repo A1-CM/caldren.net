@@ -1,4 +1,4 @@
-@extends('layouts.site')
+@extends('layouts.auth')
 @section('title', 'Set up your workspace — Caldren')
 @section('content')
 <section class="auth-shell container">
