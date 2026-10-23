@@ -10570,3 +10570,115 @@ tr:last-child td {
     font-size: 13px;
     font-weight: 700
 }
+
+/* Full-screen public mobile navigation */
+@media(max-width:760px) {
+    body.public-menu-open {
+        overflow: hidden;
+        overscroll-behavior: none;
+    }
+
+    .site-header.console-header.menu-open {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        margin: 0;
+        border-radius: 0;
+        background: radial-gradient(ellipse at 100% 20%, #15524f 0, transparent 48%), #0d252e;
+    }
+
+    .console-header.menu-open .console-header-inner {
+        width: calc(100% - 40px);
+        height: 78px;
+        grid-template-columns: 1fr auto;
+    }
+
+    .console-header.menu-open nav {
+        position: fixed;
+        z-index: 3;
+        inset: 78px 0 0;
+        display: flex;
+        height: auto;
+        max-height: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: clamp(25px, 7vh, 64px) 28px calc(30px + env(safe-area-inset-bottom));
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+        animation: mobile-observatory-open .28s ease-out both;
+    }
+
+    .console-header.menu-open nav > a {
+        min-height: 70px;
+        padding: 0 8px;
+        border-bottom: 1px solid #d7f5e51f;
+        color: #edf6f2;
+        font-size: clamp(23px, 7vw, 32px);
+        font-weight: 600;
+        letter-spacing: -.045em;
+    }
+
+    .console-header.menu-open nav > a[aria-current="page"] {
+        color: #83e5c3;
+    }
+
+    .console-header.menu-open nav > a[aria-current="page"]:after {
+        right: 10px;
+        width: 8px;
+        height: 8px;
+        background: #54ddb4;
+    }
+
+    .console-header.menu-open .console-mobile-actions {
+        gap: 10px;
+        margin-top: auto;
+        padding: 28px 0 0;
+    }
+
+    .console-header.menu-open .console-mobile-actions > a {
+        min-height: 54px;
+        padding: 0 16px;
+        border: 1px solid #d7f5e533;
+        border-radius: 12px;
+        background: #ffffff0a;
+        font-size: 14px;
+    }
+
+    .console-header.menu-open .console-mobile-actions > a.console-mobile-cta {
+        min-height: 58px;
+        border-color: #15a58a;
+        background: #0b8f7a;
+        box-shadow: 0 12px 32px #00a88430;
+    }
+
+    .console-header.menu-open .console-waveform {
+        position: fixed;
+        z-index: 4;
+        bottom: 0;
+        height: 12px;
+        opacity: .85;
+    }
+}
+
+@keyframes mobile-observatory-open {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media(prefers-reduced-motion:reduce) {
+    .console-header.menu-open nav {
+        animation: none;
+    }
+}

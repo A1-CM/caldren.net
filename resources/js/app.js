@@ -39,6 +39,10 @@ const closeMenu = () => {
   }
 
   header.classList.remove('menu-open');
+  document.body.classList.remove('public-menu-open');
+  document.querySelectorAll('#main-content, .site-footer').forEach((region) => {
+    region.inert = false;
+  });
   menu.setAttribute('aria-expanded', 'false');
   menu.setAttribute('aria-label', 'Open menu');
   menuIcon.classList.remove('fa-xmark');
@@ -51,10 +55,18 @@ menu?.addEventListener('click', () => {
   }
 
   const open = header.classList.toggle('menu-open');
+  document.body.classList.toggle('public-menu-open', open);
+  document.querySelectorAll('#main-content, .site-footer').forEach((region) => {
+    region.inert = open;
+  });
   menu.setAttribute('aria-expanded', String(open));
   menu.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
   menuIcon.classList.toggle('fa-bars', !open);
   menuIcon.classList.toggle('fa-xmark', open);
+
+  if (open) {
+    requestAnimationFrame(() => mainNavigation?.querySelector('a')?.focus({ preventScroll: true }));
+  }
 });
 
 mainNavigation?.querySelectorAll('a').forEach((link) => {
