@@ -1,11 +1,10 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#102A33"><link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}"><meta name="description" content="AI-assisted energy forecasting and optimization insights for energy, facilities, and operations teams managing commercial sites."><title>@yield('title', 'Caldren — AI Energy Forecasting &amp; Optimization')</title>@vite(['resources/css/app.css','resources/js/app.js'])</head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#102A33"><link rel="icon" type="image/webp" href="{{ asset('images/favicon.webp') }}"><meta name="description" content="AI-assisted energy forecasting and optimization insights for energy, facilities, and operations teams managing commercial sites."><title>@yield('title', 'Caldren — AI Energy Forecasting &amp; Optimization')</title>@vite(['resources/css/app.css','resources/js/app.js'])</head>
 <body class="site-body"><a class="skip-link" href="#main-content">Skip to content</a>
 <header class="site-header console-header">
     <div class="console-header-inner">
         <a class="brand" href="{{ route('home') }}" aria-label="Caldren home" @if(request()->routeIs('home')) aria-current="page" @endif>
-            <svg class="brand-mark" viewBox="0 0 42 42" fill="none" aria-hidden="true"><rect width="42" height="42" rx="12" fill="#0B8F7A"/><path d="M7 25h7l4-10 6 17 4-11h7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Caldren</span>
+            <img class="brand-logo" src="{{ asset('images/logo.webp') }}" alt="" width="2731" height="1535">
         </a>
         <button class="console-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="main-navigation" data-menu-toggle>
             <i class="fa-solid fa-bars" aria-hidden="true"></i>
@@ -35,7 +34,7 @@
 @yield('content')</main>
 <footer class="site-footer">
     <section class="footer-contact-band" aria-labelledby="footer-contact-title" data-reveal>
-        <div class="footer-contact-photo" aria-hidden="true"><img src="{{ asset('images/caldren-building-dusk.webp') }}" alt="" loading="lazy" width="1536" height="1024"></div>
+        <div class="footer-contact-photo" aria-hidden="true"><img src="{{ asset('images/energy.webp') }}" alt="" loading="lazy" width="2702" height="1120"></div>
         <div class="footer-contact-content">
             <span class="footer-kicker">ENERGY / UTILITIES</span>
             <h2 id="footer-contact-title">Have an energy question? Let’s bring it into focus.</h2>
@@ -46,7 +45,7 @@
     <div class="footer-base" data-reveal>
         <div class="footer-base-inner">
             <div class="footer-brand-block">
-                <a class="brand" href="{{ route('home') }}" aria-label="Caldren home"><span class="brand-mark-small"><i class="fa-solid fa-wave-square" aria-hidden="true"></i></span><span>Caldren</span></a>
+                <a class="brand" href="{{ route('home') }}" aria-label="Caldren home"><img class="brand-logo" src="{{ asset('images/logo.webp') }}" alt="" width="2731" height="1535"></a>
                 <p>AI energy forecasting and optimization insights for energy teams.</p>
             </div>
             <nav class="footer-link-group" aria-label="Explore Caldren">

@@ -1,7 +1,7 @@
 @php($testimonials = config('marketing.testimonials', []))
 @if(count($testimonials))
 <section class="obs-testimonials" aria-labelledby="testimonials-title">
-    <img class="obs-testimonials-image" src="{{ asset('images/caldren-building-dusk.webp') }}" alt="" loading="lazy" width="1536" height="1024" aria-hidden="true">
+    <img class="obs-testimonials-image" src="{{ asset('images/energy team perspectives 04.webp') }}" alt="" loading="lazy" width="2698" height="1150" aria-hidden="true">
     <div class="obs-testimonials-shade" aria-hidden="true"></div>
     <div class="container obs-testimonials-inner">
         <header class="obs-testimonials-heading">

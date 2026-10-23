@@ -281,11 +281,40 @@ class CaldrenTest extends TestCase
                 ->assertSee('https://embed.tawk.to/6ad5af224bf5ff34c946e7a0/1k59b88is', false)
                 ->assertSee('Have an energy question? Let’s bring it into focus.')
                 ->assertSee('Talk with the Caldren team')
-                ->assertSee(asset('images/caldren-building-dusk.webp'), false)
+                ->assertSee(asset('images/energy.webp'), false)
+                ->assertSee('type="image/webp" href="'.asset('images/favicon.webp').'"', false)
+                ->assertSee('src="'.asset('images/logo.webp').'"', false)
                 ->assertSee('href="'.route('home').'#contact"', false)
                 ->assertSee('href="'.route('home').'#privacy"', false)
                 ->assertSee('href="'.route('home').'#terms"', false);
         }
+    }
+
+    public function test_marketing_sections_use_the_new_section_images_and_dashboard_uses_the_new_logo(): void
+    {
+        $home = $this->get(route('home'))->assertOk()
+            ->assertDontSee('caldren-building-dusk.webp');
+
+        foreach ([
+            'images/hero.webp',
+            'images/context.webp',
+            'images/one energy view.webp',
+            'images/energy signals.webp',
+            'images/site plan.webp',
+            'images/energy team perspectives 04.webp',
+        ] as $image) {
+            $home->assertSee(asset($image), false);
+        }
+
+        $this->get(route('product'))
+            ->assertOk()
+            ->assertSee('src="'.asset('images/energy.webp').'"', false);
+
+        [$user] = $this->workspace();
+        $this->actingAs($user)->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('src="'.asset('images/logo.webp').'"', false)
+            ->assertSee('type="image/webp" href="'.asset('images/favicon.webp').'"', false);
     }
 
     public function test_homepage_renders_all_illustrative_testimonials_and_manual_controls(): void

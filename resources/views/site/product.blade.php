@@ -3,7 +3,7 @@
 @section('content')
 <div class="caldren-product">
     <section class="story-product-hero" aria-labelledby="product-title">
-        <img src="{{ asset('images/caldren-building-dusk.webp') }}" alt="Commercial buildings at dusk" fetchpriority="high" width="1536" height="1024">
+        <img src="{{ asset('images/energy.webp') }}" alt="Energy operations and forecasting" fetchpriority="high" width="2702" height="1120">
         <div class="container product-hero-copy">
             <span class="obs-kicker">AI ENERGY FORECASTING &amp; OPTIMIZATION</span>
             <h1 id="product-title">A clear path from energy history to the next decision.</h1>
