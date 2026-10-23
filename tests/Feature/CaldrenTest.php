@@ -312,14 +312,29 @@ class CaldrenTest extends TestCase
 
         foreach ([
             'images/hero.webp',
-            'images/context.webp',
-            'images/one energy view.webp',
             'images/energy signals.webp',
+            'images/energy signals (2).webp',
+            'images/energy signals (3).webp',
+            'images/context.webp',
+            'images/context (2).webp',
+            'images/context (3).webp',
+            'images/context (4).webp',
+            'images/one energy view.webp',
             'images/site plan.webp',
             'images/energy team perspectives 04.webp',
         ] as $image) {
             $home->assertSee(asset($image), false);
         }
+
+        $home->assertSeeInOrder([
+            asset('images/energy signals.webp'),
+            asset('images/energy signals (2).webp'),
+            asset('images/energy signals (3).webp'),
+            asset('images/context.webp'),
+            asset('images/context (2).webp'),
+            asset('images/context (3).webp'),
+            asset('images/context (4).webp'),
+        ], false);
 
         $this->get(route('product'))
             ->assertOk()

@@ -7931,12 +7931,31 @@ tr:last-child td {
     box-shadow: 0 25px 65px #102a3324
 }
 
-.story-stage img,
+.story-stage-images {
+    position: absolute;
+    inset: 0;
+    overflow: hidden
+}
+
+.story-stage-images img,
 .story-product-image img {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: block
+    object-position: center;
+}
+
+.story-stage-images img {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity .72s cubic-bezier(.22, .61, .36, 1);
+    will-change: opacity
+}
+
+.story-stage-images img.is-active {
+    opacity: 1
 }
 
 [data-scene-image] {
@@ -8525,6 +8544,11 @@ tr:last-child td {
 @media(prefers-reduced-motion:reduce) {
     [data-scene-image] {
         transform: none !important
+    }
+
+    .story-stage-images img {
+        transition: none;
+        will-change: auto
     }
 
     [data-reveal],

@@ -227,9 +227,11 @@ const storyPage = document.querySelector('[data-story-page]');
 if (storyPage) {
   const scenes = [...storyPage.querySelectorAll('[data-scroll-scene]')].map((element) => ({
     element,
-    image: element.querySelector('[data-scene-image]'),
+    imageLayers: [...element.querySelectorAll('[data-scene-image]')],
+    storyImages: [...element.querySelectorAll('[data-story-image]')],
     steps: [...element.querySelectorAll('[data-story-step]')],
     caption: element.querySelector('[data-scene-caption]'),
+    activeStep: null,
   }));
   const sectionLinks = [...document.querySelectorAll('[data-section-link]')];
   const sections = sectionLinks.map((link) => ({link, section: document.getElementById(link.dataset.sectionLink)}));
@@ -244,10 +246,12 @@ if (storyPage) {
       const bounds = scene.element.getBoundingClientRect();
       if (bounds.bottom < 0 || bounds.top > viewport) continue;
       const progress = Math.max(0, Math.min(1, (viewport - bounds.top) / (bounds.height + viewport)));
-      if (scene.image && !reducedMotionQuery.matches) {
+      if (!reducedMotionQuery.matches && scene.imageLayers.length) {
         const amplitude = window.innerWidth <= 760 ? 10 : 24;
-        scene.image.style.setProperty('--scene-shift', `${(0.5 - progress) * amplitude}px`);
-        scene.image.style.setProperty('--scene-scale', String(1.07 + progress * 0.12));
+        scene.imageLayers.forEach((image) => {
+          image.style.setProperty('--scene-shift', `${(0.5 - progress) * amplitude}px`);
+          image.style.setProperty('--scene-scale', String(1.07 + progress * 0.12));
+        });
       }
       if (scene.steps.length) {
         let active = scene.steps[0];
@@ -255,7 +259,16 @@ if (storyPage) {
           if (step.getBoundingClientRect().top < headerHeight + (viewport - headerHeight) * 0.5) active = step;
         }
         scene.steps.forEach((step) => step.classList.toggle('is-current', step === active));
-        if (scene.caption && scene.caption.textContent !== active.dataset.caption) scene.caption.textContent = active.dataset.caption;
+        if (scene.activeStep !== active) {
+          scene.activeStep = active;
+          if (scene.caption) scene.caption.textContent = active.dataset.caption;
+          const activeImageIndex = Number(active.dataset.imageIndex);
+          if (Number.isInteger(activeImageIndex)) {
+            scene.storyImages.forEach((image) => {
+              image.classList.toggle('is-active', Number(image.dataset.imageIndex) === activeImageIndex);
+            });
+          }
+        }
       }
     }
     for (const {link, section} of sections) {
@@ -289,9 +302,11 @@ if (storyPage) {
   reducedMotionQuery.addEventListener('change', () => {
     if (reducedMotionQuery.matches) {
       revealElements.forEach((element) => element.classList.remove('reveal-pending'));
-      scenes.forEach(({image}) => {
-        image?.style.removeProperty('--scene-shift');
-        image?.style.removeProperty('--scene-scale');
+      scenes.forEach(({imageLayers}) => {
+        imageLayers.forEach((image) => {
+          image.style.removeProperty('--scene-shift');
+          image.style.removeProperty('--scene-scale');
+        });
       });
     }
     queueStory();
