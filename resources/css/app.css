@@ -9750,7 +9750,7 @@ tr:last-child td {
     height: 18px;
     border-radius: 0%;
     object-fit: cover;
-    background: #fff
+    background: transparent;
 }
 
 .footer-social-link:focus-visible {

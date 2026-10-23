@@ -18,7 +18,7 @@
                     <figure class="obs-quote-slide" data-testimonial-slide data-index="{{ $index }}" role="group" aria-roledescription="slide" aria-label="{{ $index + 1 }} of {{ count($testimonials) }}">
                         <span class="obs-quote-index" aria-hidden="true">0{{ $index + 1 }}</span>
                         <blockquote><p>“{{ $testimonial['quote'] }}”</p></blockquote>
-                        <figcaption><strong>{{ $testimonial['name'] }}</strong><span>{{ $testimonial['role'] }} · {{ $testimonial['organization'] }}</span></figcaption>
+                        <figcaption><strong>{{ $testimonial['name'] }}</strong><span>{{ $testimonial['role'] }}</span></figcaption>
                     </figure>
                 @endforeach
             </div>
