@@ -1166,7 +1166,13 @@ input[type=file] {
     padding: 28px 17px;
     display: flex;
     flex-direction: column;
-    min-height: 100vh
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden
 }
 
 .brand-light {
