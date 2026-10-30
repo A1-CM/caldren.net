@@ -105,8 +105,9 @@ class EnergyOperationsTest extends TestCase
         $this->actingAs($member)->patch(route('alerts.update', $alert), ['status' => 'acknowledged'])->assertRedirect();
         $this->assertDatabaseHas('operational_alerts', ['id' => $alert->id, 'status' => 'acknowledged', 'acknowledged_by' => $member->id]);
 
-        $this->actingAs($member)->post(route('billing.activate'), ['plan_key' => 'site', 'activation_code' => '4242 4242 4242 4242'])->assertForbidden();
-        $this->actingAs($owner)->post(route('billing.activate'), ['plan_key' => 'site', 'activation_code' => '4242 4242 4242 4242'])->assertRedirect();
+        $activationDetails = ['plan_key' => 'site', 'cardholder' => 'Taylor Morgan', 'card_number' => '4242 4242 4242 4242', 'expiry' => now()->addYear()->format('Y-m'), 'cvc' => '123'];
+        $this->actingAs($member)->post(route('billing.activate'), $activationDetails)->assertForbidden();
+        $this->actingAs($owner)->post(route('billing.activate'), $activationDetails)->assertRedirect();
     }
 
     public function test_a_new_matching_alert_event_reopens_a_resolved_alert(): void
@@ -157,6 +158,6 @@ class EnergyOperationsTest extends TestCase
             $response->assertOk();
             self::assertDoesNotMatchRegularExpression('/\b(?:sandbox|test|demo|simulation|simulated|design-preview)\b/i', $response->getContent());
         }
-        $responses[6]->assertSee('Plan activation code')->assertSee('Activation history');
+        $responses[6]->assertSee('Card number')->assertSee('Activation history');
     }
 }

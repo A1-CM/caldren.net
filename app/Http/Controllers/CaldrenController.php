@@ -380,16 +380,24 @@ class CaldrenController extends Controller
         return view('dashboard.billing', compact('organization', 'payments', 'isOwner', 'plans', 'checkoutPlans', 'selectedPlanKey'));
     }
 
-    public function activatePlan(Request $request)
+    public function activatePlan(Request $request): RedirectResponse
     {
         $organization = $this->organization($request);
         abort_unless($organization->users()->where('users.id', $request->user()->id)->wherePivot('role', 'owner')->exists(), 403);
-        $data = $request->validate([
-            'activation_code' => 'required|string',
+        $validator = Validator::make($request->all(), [
+            'cardholder' => 'required|string|max:120',
+            'card_number' => 'required|string|max:32',
+            'expiry' => ['required', 'date_format:Y-m', 'after_or_equal:'.now()->format('Y-m')],
+            'cvc' => ['required', 'regex:/^\d{3,4}$/'],
             'plan_key' => ['required', 'string', 'in:'.implode(',', array_keys(array_filter(config('plans'), fn (array $plan): bool => $plan['checkout_enabled'] ?? false)))],
         ]);
-        if (preg_replace('/\s+/', '', $data['activation_code']) !== '4242424242424242') {
-            throw ValidationException::withMessages(['activation_code' => 'Use the displayed plan activation code.']);
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput($request->except(['cardholder', 'card_number', 'expiry', 'cvc']));
+        }
+        $data = $validator->validated();
+
+        if (preg_replace('/\D+/', '', $data['card_number']) !== '4242424242424242') {
+            return back()->withErrors(['card_number' => 'This checkout only accepts the displayed 4242 card number.'])->withInput($request->except(['cardholder', 'card_number', 'expiry', 'cvc']));
         }
         $plan = config('plans.'.$data['plan_key']);
         DB::transaction(function () use ($organization, $data, $plan) {

@@ -59,6 +59,17 @@ class CaldrenTest extends TestCase
         return [$user, $organization];
     }
 
+    private function planActivationPayload(string $planKey = 'site', string $cardNumber = '4242 4242 4242 4242'): array
+    {
+        return [
+            'plan_key' => $planKey,
+            'cardholder' => 'Taylor Morgan',
+            'card_number' => $cardNumber,
+            'expiry' => now()->addYear()->format('Y-m'),
+            'cvc' => '123',
+        ];
+    }
+
     public function test_oauth_buttons_only_render_for_configured_providers(): void
     {
         config()->set('services.google.client_id', 'google-client');
@@ -793,7 +804,7 @@ class CaldrenTest extends TestCase
         $organization->update(['trial_ends_at' => now()->subDay()]);
         $this->actingAs($user)->post(route('buildings.store'), ['name' => 'Tower A', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15])->assertSessionHasErrors('access');
         $this->actingAs($user)->get(route('billing'))->assertSee('Choose an access plan')->assertSee('USD 49/month')->assertSee('up to 3 buildings')->assertDontSee('Campus — USD 249/month');
-        $this->actingAs($user)->post(route('billing.activate'), ['activation_code' => '4242 4242 4242 4242', 'plan_key' => 'site'])->assertRedirect()->assertSessionHas('success');
+        $this->actingAs($user)->post(route('billing.activate'), $this->planActivationPayload())->assertRedirect()->assertSessionHas('success');
         $this->actingAs($user)->get(route('billing'))->assertSee('Site')->assertSee('$49')->assertSee('Up to 3 buildings');
         $this->assertDatabaseHas('subscriptions', ['organization_id' => $organization->id, 'plan_key' => 'site', 'monthly_price_cents' => 4900, 'status' => 'active']);
         $this->assertDatabaseHas('demo_payments', ['organization_id' => $organization->id, 'amount_cents' => 4900, 'status' => 'activated']);
@@ -878,7 +889,7 @@ class CaldrenTest extends TestCase
             $organization->buildings()->create(['name' => 'Existing Site '.$number, 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15]);
         }
 
-        $this->actingAs($user)->post(route('billing.activate'), ['activation_code' => '4242 4242 4242 4242', 'plan_key' => 'site'])->assertRedirect();
+        $this->actingAs($user)->post(route('billing.activate'), $this->planActivationPayload())->assertRedirect();
         $this->actingAs($user)->post(route('buildings.store'), ['name' => 'Extra Site', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15])->assertSessionHasErrors('name');
 
         $this->assertSame(3, $organization->buildings()->count());
@@ -891,7 +902,7 @@ class CaldrenTest extends TestCase
         [$user, $organization] = $this->workspace();
         $organization->update(['trial_ends_at' => now()->subDay()]);
 
-        $this->actingAs($user)->post(route('billing.activate'), ['activation_code' => '4242 4242 4242 4242', 'plan_key' => 'portfolio'])->assertRedirect()->assertSessionHas('success');
+        $this->actingAs($user)->post(route('billing.activate'), $this->planActivationPayload('portfolio'))->assertRedirect()->assertSessionHas('success');
 
         $this->assertDatabaseHas('subscriptions', ['organization_id' => $organization->id, 'plan_key' => 'portfolio', 'monthly_price_cents' => 9900, 'status' => 'active']);
         $this->assertDatabaseHas('demo_payments', ['organization_id' => $organization->id, 'amount_cents' => 9900, 'status' => 'activated']);
@@ -906,7 +917,7 @@ class CaldrenTest extends TestCase
         $organization->buildings()->create(['name' => 'Campus Site', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15]);
 
         $this->actingAs($user)->get(route('billing'))->assertSee('Campus')->assertSee('$249')->assertDontSee('<option value="campus"', false);
-        $this->actingAs($user)->post(route('billing.activate'), ['activation_code' => '4242 4242 4242 4242', 'plan_key' => 'campus'])->assertSessionHasErrors('plan_key');
+        $this->actingAs($user)->post(route('billing.activate'), $this->planActivationPayload('campus'))->assertSessionHasErrors('plan_key');
 
         $this->assertTrue($organization->fresh()->hasAccess());
         $this->assertSame(1, $organization->buildings()->count());
@@ -918,7 +929,7 @@ class CaldrenTest extends TestCase
         [$user, $organization] = $this->workspace();
         $organization->update(['trial_ends_at' => now()->subDay()]);
 
-        $this->actingAs($user)->post(route('billing.activate'), ['activation_code' => '4242 4242 4242 4242', 'plan_key' => 'unlimited'])->assertSessionHasErrors('plan_key');
+        $this->actingAs($user)->post(route('billing.activate'), $this->planActivationPayload('unlimited'))->assertSessionHasErrors('plan_key');
 
         $this->assertDatabaseCount('demo_payments', 0);
         $this->assertDatabaseHas('subscriptions', ['organization_id' => $organization->id, 'status' => 'trialing']);
@@ -927,7 +938,7 @@ class CaldrenTest extends TestCase
     public function test_plan_activation_rejects_other_codes(): void
     {
         [$user] = $this->workspace();
-        $this->actingAs($user)->post(route('billing.activate'), ['activation_code' => '4111 1111 1111 1111', 'plan_key' => 'portfolio'])->assertSessionHasErrors('activation_code');
+        $this->actingAs($user)->post(route('billing.activate'), $this->planActivationPayload('portfolio', '4111 1111 1111 1111'))->assertSessionHasErrors('card_number')->assertSessionMissing('_old_input.card_number')->assertSessionMissing('_old_input.cvc');
         $this->assertDatabaseCount('demo_payments', 0);
     }
 

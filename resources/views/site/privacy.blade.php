@@ -38,7 +38,7 @@
             <section id="privacy-payments" class="policy-section">
                 <span class="policy-section-number">05 / PLAN ACTIVATION</span>
                 <h2>Plan activation records</h2>
-                <p>Caldren records the selected plan reference and access period when an owner uses the displayed activation code. It does not collect card details or process a payment.</p>
+                <p>Caldren records the selected plan reference and access period when an owner submits the displayed 4242 card number in the signed-in checkout. Card form values are used only to validate that request, then discarded; Caldren does not store card details, contact a payment network, or process a payment.</p>
             </section>
             <section id="privacy-requests" class="policy-section">
                 <span class="policy-section-number">06 / GET IN TOUCH</span>

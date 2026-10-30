@@ -42,7 +42,7 @@
             <section id="terms-activation" class="policy-section">
                 <span class="policy-section-number">06 / PLAN ACTIVATION</span>
                 <h2>Plan activation</h2>
-                <p>Caldren offers Site at USD 49/month for up to 3 buildings and Portfolio at USD 99/month for up to 10. Campus portfolios can contact sales for a tailored discussion. Signed-in workspace owners can use the displayed 4242 activation code to record the selected tier and add one month of access. Caldren does not collect card details, process a payment, or renew access automatically.</p>
+                <p>Caldren offers Site at USD 49/month for up to 3 buildings and Portfolio at USD 99/month for up to 10. Campus portfolios can contact sales for a tailored discussion. Signed-in workspace owners can enter the displayed 4242 card number in the plan activation checkout to record the selected tier and add one month of access. Card form values are discarded after validation. Caldren does not contact a payment network, process a payment, or renew access automatically.</p>
             </section>
             <section id="terms-availability" class="policy-section">
                 <span class="policy-section-number">07 / AVAILABILITY</span>
