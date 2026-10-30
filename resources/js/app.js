@@ -1,5 +1,6 @@
 import { Chart, LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip } from 'chart.js';
 Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip);
+window.Chart = Chart;
 
 const passwordStrengthInput = document.querySelector('[data-password-strength-input]');
 const passwordStrengthMeter = document.querySelector('[data-password-strength-meter]');

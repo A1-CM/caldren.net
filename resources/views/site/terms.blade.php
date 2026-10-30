@@ -8,7 +8,7 @@
         <a href="#terms-data">Data you provide</a>
         <a href="#terms-estimates">Estimates and decisions</a>
         <a href="#terms-trial">Trial and access</a>
-        <a href="#terms-demo">Demo checkout</a>
+        <a href="#terms-activation">Plan activation</a>
         <a href="#terms-availability">Availability</a>
     </nav>
     <div class="policy-content">
@@ -22,7 +22,7 @@
             <section id="terms-accounts" class="policy-section">
                 <span class="policy-section-number">02 / WORKSPACES</span>
                 <h2>Accounts and teams</h2>
-                <p>You are responsible for keeping your account credentials secure and for the people you invite to your organization. Team members with access to a workspace can see that organization's site-level energy information. Workspace owners manage invitations and can use demo checkout.</p>
+                <p>You are responsible for keeping your account credentials secure and for the people you invite to your organization. Team members with access to a workspace can see that organization's site-level energy information. Workspace owners manage invitations and plan activation.</p>
             </section>
             <section id="terms-data" class="policy-section">
                 <span class="policy-section-number">03 / INPUTS</span>
@@ -39,10 +39,10 @@
                 <h2>Trial and access</h2>
                 <p>New organizations receive a 30-day trial without providing a card, with a maximum of 3 buildings in the Site trial workspace. After access expires, historical workspace data remains visible, while adding buildings or bills, uploading readings, and generating forecasts are gated until access is active again.</p>
             </section>
-            <section id="terms-demo" class="policy-section">
-                <span class="policy-section-number">06 / DEMO BILLING</span>
-                <h2>Demo checkout</h2>
-                <p>Caldren offers Site at USD 49/month for up to 3 buildings and Portfolio at USD 99/month for up to 10. Campus portfolios can contact sales for a tailored discussion. The current checkout is a clearly labelled simulation available to signed-in workspace owners. It accepts only the displayed 4242 demo number. A successful simulation records the selected tier and payment amount and adds one month of access; no money is charged, no card details are stored, and access does not renew automatically.</p>
+            <section id="terms-activation" class="policy-section">
+                <span class="policy-section-number">06 / PLAN ACTIVATION</span>
+                <h2>Plan activation</h2>
+                <p>Caldren offers Site at USD 49/month for up to 3 buildings and Portfolio at USD 99/month for up to 10. Campus portfolios can contact sales for a tailored discussion. Signed-in workspace owners can use the displayed 4242 activation code to record the selected tier and add one month of access. Caldren does not collect card details, process a payment, or renew access automatically.</p>
             </section>
             <section id="terms-availability" class="policy-section">
                 <span class="policy-section-number">07 / AVAILABILITY</span>

@@ -8,7 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Building extends Model
 {
-    protected $fillable = ['organization_id', 'name', 'location', 'timezone', 'currency', 'energy_rate', 'peak_rate', 'peak_start_hour', 'peak_end_hour'];
+    protected $fillable = ['organization_id', 'name', 'location', 'timezone', 'currency', 'energy_rate', 'peak_rate', 'peak_start_hour', 'peak_end_hour', 'forecast_peak_threshold_percent', 'bill_change_threshold_percent', 'coverage_alert_threshold_percent', 'stale_after_hours', 'alerts_enabled'];
+
+    protected function casts(): array
+    {
+        return ['alerts_enabled' => 'boolean'];
+    }
 
     public function organization(): BelongsTo
     {
@@ -28,5 +33,25 @@ class Building extends Model
     public function forecasts(): HasMany
     {
         return $this->hasMany(ForecastRun::class);
+    }
+
+    public function dailySummaries(): HasMany
+    {
+        return $this->hasMany(DailyEnergySummary::class);
+    }
+
+    public function dataImports(): HasMany
+    {
+        return $this->hasMany(DataImport::class);
+    }
+
+    public function opportunities(): HasMany
+    {
+        return $this->hasMany(Opportunity::class);
+    }
+
+    public function alerts(): HasMany
+    {
+        return $this->hasMany(OperationalAlert::class);
     }
 }

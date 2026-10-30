@@ -6,10 +6,10 @@
     <div class="container obs-testimonials-inner">
         <header class="obs-testimonials-heading">
             <span class="obs-testimonials-kicker">ENERGY TEAM PERSPECTIVES / 0{{ count($testimonials) }}</span>
-            <span class="eyebrow">{{ config('marketing.testimonials_are_samples') ? 'ILLUSTRATIVE TESTIMONIALS' : 'CUSTOMER PERSPECTIVES' }}</span>
+            <span class="eyebrow">{{ config('marketing.testimonials_are_samples') ? 'ILLUSTRATIVE ENERGY-TEAM PERSONAS' : 'CUSTOMER PERSPECTIVES' }}</span>
             <h2 id="testimonials-title">A clearer outlook for energy decisions.</h2>
             @if(config('marketing.testimonials_are_samples'))
-                <p class="obs-sample-note">Sample statements for design preview only. These are not real customer testimonials.</p>
+                <p class="obs-sample-note">These fictional personas show how different energy teams could use Caldren. They are not customer endorsements.</p>
             @endif
         </header>
         <div class="obs-quote-observatory" data-testimonial-carousel role="region" aria-roledescription="carousel" aria-label="Energy team perspectives">
@@ -18,12 +18,12 @@
                     <figure class="obs-quote-slide" data-testimonial-slide data-index="{{ $index }}" role="group" aria-roledescription="slide" aria-label="{{ $index + 1 }} of {{ count($testimonials) }}">
                         <span class="obs-quote-index" aria-hidden="true">0{{ $index + 1 }}</span>
                         <blockquote><p>“{{ $testimonial['quote'] }}”</p></blockquote>
-                        <figcaption><strong>{{ $testimonial['name'] }}</strong><span>{{ $testimonial['role'] }}</span></figcaption>
+                        <figcaption><strong>{{ $testimonial['name'] }}</strong><span>{{ $testimonial['role'] }}</span><small>{{ $testimonial['portfolio'] }} · {{ $testimonial['data'] }} · {{ $testimonial['focus'] }}</small></figcaption>
                     </figure>
                 @endforeach
             </div>
-            <div class="obs-quote-navigation" aria-label="Testimonial navigation">
-                <div class="obs-quote-selectors" role="group" aria-label="Choose a testimonial">
+            <div class="obs-quote-navigation" aria-label="Persona navigation">
+                <div class="obs-quote-selectors" role="group" aria-label="Choose a persona">
                     @foreach($testimonials as $index => $testimonial)
                         <button type="button" data-testimonial-select="{{ $index }}" aria-label="Show quote {{ $index + 1 }} of {{ count($testimonials) }}" aria-controls="testimonial-quote-stage" aria-pressed="{{ $index === 0 ? 'true' : 'false' }}">
                             <span>0{{ $index + 1 }}</span><span class="obs-quote-selector-name">{{ $testimonial['name'] }}</span>
@@ -31,8 +31,8 @@
                     @endforeach
                 </div>
                 <div class="obs-quote-arrows">
-                    <button type="button" data-testimonial-prev aria-label="Previous testimonial" aria-controls="testimonial-quote-stage"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
-                    <button type="button" data-testimonial-next aria-label="Next testimonial" aria-controls="testimonial-quote-stage"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+                    <button type="button" data-testimonial-prev aria-label="Previous persona" aria-controls="testimonial-quote-stage"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
+                    <button type="button" data-testimonial-next aria-label="Next persona" aria-controls="testimonial-quote-stage"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
                 </div>
             </div>
         </div>

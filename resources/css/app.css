@@ -10927,3 +10927,57 @@ tr:last-child td {
         transform: none
     }
 }
+
+/* Energy operations workspace */
+.sidebar-group { margin: 0 0 18px; }
+.sidebar-group .sidebar-label { margin: 0 14px 7px; }
+.dashboard-page-head { display:flex; justify-content:space-between; align-items:flex-end; gap:28px; margin-bottom:28px; }
+.dashboard-page-head.compact { margin-top:22px; }
+.dashboard-page-head h1 { margin:.25rem 0 .4rem; font-size:clamp(2rem,4vw,3.15rem); letter-spacing:-.045em; }
+.dashboard-page-head p { max-width:720px; margin:0; color:#53686d; }
+.quick-actions,.report-actions { display:flex; flex-wrap:wrap; gap:10px; }
+.operations-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:24px; }
+.ops-metric { min-height:166px; padding:22px; border:1px solid rgba(11,143,122,.2); border-radius:20px; background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(221,243,234,.55)); box-shadow:0 16px 38px rgba(16,42,51,.08); }
+.ops-metric span { display:block; color:#53686d; font-size:.76rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+.ops-metric strong { display:block; margin:18px 0 8px; color:#102a33; font-size:clamp(1.55rem,2.4vw,2.25rem); line-height:1.1; }
+.ops-metric strong small { font-size:.8rem; font-weight:700; }
+.ops-metric p { margin:0; color:#60737a; font-size:.86rem; }
+.ops-metric a { color:#0b725f; }
+.ops-metric.metric-attention { border-color:rgba(229,166,74,.65); background:linear-gradient(145deg,#fff,#fff7e8); }
+.dashboard-two-column { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(300px,.8fr); gap:20px; margin:20px 0; }
+.dashboard-panel { padding:24px; border:1px solid #d9e5e1; border-radius:20px; background:#fff; box-shadow:0 12px 30px rgba(16,42,51,.06); }
+.panel-heading,.opportunity-heading,.alert-row { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; }
+.panel-heading { margin-bottom:18px; }
+.panel-heading h2,.dashboard-panel h2 { margin:.3rem 0; }
+.ranking-row { display:flex; justify-content:space-between; gap:20px; padding:15px 4px; border-top:1px solid #e4ece9; color:#102a33; }
+.ranking-row span,.ranking-row small { display:block; }
+.ranking-row small { margin-top:3px; color:#6a7c81; }
+.action-list { display:grid; gap:8px; }
+.action-list a { display:flex; gap:15px; align-items:center; padding:15px; border-radius:14px; color:#102a33; background:#f4f8f5; }
+.action-list i { width:24px; color:#0b8f7a; text-align:center; }
+.action-list span,.action-list small { display:block; }.action-list small { color:#60737a; margin-top:3px; }
+.dashboard-filter-bar { display:flex; flex-wrap:wrap; align-items:flex-end; gap:14px; margin:0 0 22px; padding:16px; border:1px solid #d9e5e1; border-radius:16px; background:#fff; }
+.dashboard-filter-bar label,.dashboard-filter-bar fieldset { margin:0; }.dashboard-filter-bar fieldset { display:flex; gap:12px; padding:0; border:0; }.dashboard-filter-bar legend { font-size:.75rem; font-weight:800; }
+.dashboard-filter-bar select,.dashboard-filter-bar input { min-width:150px; }
+.chart-frame { height:340px; }
+.responsive-table { overflow-x:auto; }
+.responsive-table table { min-width:680px; width:100%; border-collapse:collapse; }
+.responsive-table th,.responsive-table td { padding:13px 12px; border-bottom:1px solid #e5eeea; text-align:left; vertical-align:top; }
+.responsive-table th { color:#60737a; font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; }
+.responsive-table td small { display:block; color:#6a7c81; margin-top:3px; }
+.forecast-readiness-grid,.health-grid,.report-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-bottom:22px; }
+.status-dot { display:inline-block; width:10px; height:10px; border-radius:50%; background:#8ca09a; }.status-dot.good{background:#0b8f7a}.status-dot.warning{background:#e5a64a}
+.coverage-bar { height:7px; margin:14px 0; overflow:hidden; border-radius:999px; background:#e7efec; }.coverage-bar span{display:block;height:100%;background:#0b8f7a}
+.status-pill { display:inline-flex; margin:0 5px 5px 0; padding:5px 9px; border-radius:999px; background:#e8f0ed; color:#345057; font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+.status-pill.high,.severity-high .status-pill:first-child { background:#fff0e4;color:#9a4d17 }.status-pill.medium{background:#fff7df;color:#815f09}.status-pill.low,.status-pill.complete,.status-pill.completed{background:#ddf3ea;color:#086858}.status-pill.failed{background:#fee8e5;color:#a13429}
+.create-panel summary,.activity-log summary { cursor:pointer; font-weight:800; }.create-panel form { margin-top:22px; }
+.dashboard-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }.dashboard-form-grid label{margin:0}.field-wide{grid-column:1/-1}.checkbox-row{display:flex!important;align-items:center;gap:10px}.checkbox-row input{width:auto}
+.opportunity-list,.alert-list { display:grid; gap:16px; }.opportunity-card h2,.alert-row h2{margin:.5rem 0}.opportunity-status{font-weight:900;color:#0b725f}.inline-facts{display:flex;flex-wrap:wrap;gap:28px;margin:20px 0}.inline-facts dt{font-size:.7rem;text-transform:uppercase;color:#6a7c81}.inline-facts dd{margin:3px 0 0;font-weight:800}.inline-update-form{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr)) minmax(160px,1.5fr) auto;gap:8px}.activity-log{margin-top:16px;border-top:1px solid #e5eeea;padding-top:14px}
+.alert-row { border-left:5px solid #8ca09a; }.alert-row.severity-high{border-left-color:#d06a25}.alert-row.severity-medium{border-left-color:#e5a64a}.alert-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px}
+.health-card dl,.plan-details { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1px; overflow:hidden; border:1px solid #e0e9e6; border-radius:14px; background:#e0e9e6; }.health-card dl div,.plan-details div{padding:13px;background:#fff}.health-card dt,.plan-details dt{font-size:.7rem;text-transform:uppercase;color:#6a7c81}.health-card dd,.plan-details dd{margin:4px 0 0;font-weight:800}
+.report-builder { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:15px; }.report-actions{grid-column:1/-1}.report-cards i{font-size:1.6rem;color:#0b8f7a}
+.building-tabs { display:flex; gap:6px; overflow-x:auto; margin:-8px 0 24px; padding:6px; border:1px solid #d9e5e1; border-radius:15px; background:#fff; }.building-tabs a{white-space:nowrap;padding:10px 16px;border-radius:10px;color:#53686d;font-weight:800}.building-tabs a.active{background:#102a33;color:#fff}
+.activation-note{display:flex;gap:15px;padding:18px 20px;margin-bottom:20px;border:1px solid rgba(11,143,122,.32);border-radius:18px;background:#eaf8f2}.activation-note i{color:#0b8f7a;font-size:1.4rem}.activation-note p{margin:.3rem 0 0}
+.mobile-dashboard-menu { display:none; }
+@media(max-width:1100px){.operations-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.forecast-readiness-grid,.health-grid,.report-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.inline-update-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.dashboard-page-head,.panel-heading,.opportunity-heading,.alert-row{align-items:stretch;flex-direction:column}.dashboard-two-column{grid-template-columns:1fr}.operations-metrics,.forecast-readiness-grid,.health-grid,.report-cards,.dashboard-form-grid,.report-builder{grid-template-columns:1fr}.field-wide,.report-actions{grid-column:auto}.ops-metric{min-height:auto}.dashboard-filter-bar{align-items:stretch;flex-direction:column}.dashboard-filter-bar label,.dashboard-filter-bar select,.dashboard-filter-bar input{width:100%}.dashboard-filter-bar fieldset{flex-wrap:wrap}.inline-update-form{grid-template-columns:1fr}.alert-actions{justify-content:flex-start}.health-card dl,.plan-details{grid-template-columns:1fr}.mobile-dashboard-nav{display:none!important}.mobile-dashboard-menu{display:block;margin:12px 16px 0;border:1px solid #d9e5e1;border-radius:14px;background:#fff}.mobile-dashboard-menu summary{display:flex;justify-content:space-between;padding:14px 16px;font-weight:800;cursor:pointer}.mobile-dashboard-menu nav{display:grid;padding:0 16px 16px}.mobile-dashboard-menu strong{margin:12px 0 4px;color:#6a7c81;font-size:.7rem;text-transform:uppercase}.mobile-dashboard-menu a,.mobile-dashboard-menu button{padding:9px 4px;color:#102a33;text-align:left}.chart-frame{height:260px}}

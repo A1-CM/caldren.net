@@ -353,7 +353,9 @@ class CaldrenTest extends TestCase
 
         $this->get(route('home'))
             ->assertSee('class="cf-turnstile"', false)
-            ->assertSee('Sample statements for design preview only. These are not real customer testimonials.')
+            ->assertSee('These fictional personas show how different energy teams could use Caldren. They are not customer endorsements.')
+            ->assertSee('Eight-site portfolio')
+            ->assertSee('Forecast variance review')
             ->assertSee('A clear view of utility bills and interval readings would help our energy team prepare for the week.')
             ->assertSee('Putting a demand outlook beside its historical baseline would give us a better starting point for review.')
             ->assertSee('Comparing demand patterns across sites would help us see where our team should look closer.')
@@ -361,7 +363,7 @@ class CaldrenTest extends TestCase
             ->assertSee('data-testimonial-carousel', false)
             ->assertSee('data-testimonial-select="0"', false)
             ->assertSee('data-testimonial-next', false)
-            ->assertSee('Previous testimonial');
+            ->assertSee('Previous persona');
     }
 
     public function test_marketing_copy_positions_caldren_around_energy_forecasting_and_optimization(): void
@@ -382,7 +384,7 @@ class CaldrenTest extends TestCase
             ->assertSee('$99')
             ->assertSee('Contact sales')
             ->assertDontSee('$249')
-            ->assertSee('no card details are stored');
+            ->assertSee('stores no card details');
 
         $product = $this->get(route('product'))
             ->assertSee('AI ENERGY FORECASTING &amp; OPTIMIZATION', false)
@@ -726,7 +728,7 @@ class CaldrenTest extends TestCase
             ->assertSee('Target timeline')
             ->assertDontSee('$249')
             ->assertDontSee('DEMO CHECKOUT / NO REAL PAYMENT')
-            ->assertSee('Portfolio activation is currently a demo checkout');
+            ->assertSee('Portfolio access is activated with the displayed code');
         preg_match_all('/<article class="tier-card tier-card-[^"]+".*?<\/article>/s', $response->getContent(), $tierCards);
         $this->assertCount(3, $tierCards[0]);
         foreach ($tierCards[0] as $tierCard) {
@@ -777,21 +779,24 @@ class CaldrenTest extends TestCase
         $valid = UploadedFile::fake()->createWithContent('usage.csv', "timestamp,kwh\n2026-10-01 00:00,4.5\n2026-10-01T02:00:00+01:00,3.5\n");
         $this->actingAs($user)->post(route('buildings.upload', $building), ['file' => $valid])->assertRedirect();
         $this->assertSame(2, $building->readings()->count());
+        $this->assertDatabaseHas('data_imports', ['building_id' => $building->id, 'status' => 'completed', 'row_count' => 2, 'inserted_count' => 2]);
+        $this->assertSame('2026-10-01', $building->dailySummaries()->firstOrFail()->summary_date->toDateString());
+        $this->assertDatabaseHas('operational_alerts', ['building_id' => $building->id, 'type' => 'low_coverage', 'status' => 'open']);
         $duplicate = UploadedFile::fake()->createWithContent('usage.csv', "timestamp,kwh\n2026-10-01 00:00,4.5\n2026-10-01 00:00,3.5\n");
         $this->actingAs($user)->post(route('buildings.upload', $building), ['file' => $duplicate])->assertSessionHasErrors('file');
         $this->assertSame(2, $building->readings()->count());
     }
 
-    public function test_expired_trial_blocks_writes_until_demo_payment(): void
+    public function test_expired_trial_blocks_writes_until_plan_activation(): void
     {
         [$user,$organization] = $this->workspace();
         $organization->update(['trial_ends_at' => now()->subDay()]);
         $this->actingAs($user)->post(route('buildings.store'), ['name' => 'Tower A', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15])->assertSessionHasErrors('access');
-        $this->actingAs($user)->get(route('billing'))->assertSee('Choose a self-serve plan')->assertSee('USD 49/month')->assertSee('up to 3 buildings')->assertDontSee('Campus — USD 249/month');
-        $this->actingAs($user)->post(route('billing.demo'), ['demo_card' => '4242 4242 4242 4242', 'plan_key' => 'site'])->assertRedirect()->assertSessionHas('success');
+        $this->actingAs($user)->get(route('billing'))->assertSee('Choose an access plan')->assertSee('USD 49/month')->assertSee('up to 3 buildings')->assertDontSee('Campus — USD 249/month');
+        $this->actingAs($user)->post(route('billing.activate'), ['activation_code' => '4242 4242 4242 4242', 'plan_key' => 'site'])->assertRedirect()->assertSessionHas('success');
         $this->actingAs($user)->get(route('billing'))->assertSee('Site')->assertSee('$49')->assertSee('Up to 3 buildings');
         $this->assertDatabaseHas('subscriptions', ['organization_id' => $organization->id, 'plan_key' => 'site', 'monthly_price_cents' => 4900, 'status' => 'active']);
-        $this->assertDatabaseHas('demo_payments', ['organization_id' => $organization->id, 'amount_cents' => 4900, 'status' => 'simulated']);
+        $this->assertDatabaseHas('demo_payments', ['organization_id' => $organization->id, 'amount_cents' => 4900, 'status' => 'activated']);
         $this->assertDatabaseCount('demo_payments', 1);
         $this->assertTrue($organization->fresh()->load('subscription')->hasAccess());
         $this->actingAs($user)->post(route('buildings.store'), ['name' => 'Tower A', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15])->assertRedirect();
@@ -819,6 +824,8 @@ class CaldrenTest extends TestCase
         $this->actingAs($user)->post(route('buildings.forecast', $building))->assertRedirect();
         $this->assertDatabaseHas('forecast_runs', ['building_id' => $building->id, 'status' => 'complete', 'source' => 'groq', 'model' => 'openai/gpt-oss-120b']);
         $this->assertDatabaseCount('forecast_points', 7);
+        $this->assertDatabaseHas('opportunities', ['organization_id' => $organization->id, 'building_id' => $building->id, 'source' => 'forecast', 'title' => 'Review peak loads']);
+        $this->assertDatabaseHas('operational_alerts', ['building_id' => $building->id, 'type' => 'forecast_peak', 'status' => 'open']);
         Http::assertSent(fn ($request): bool => $request->url() === 'https://api.groq.com/openai/v1/chat/completions'
             && $request->hasHeader('Authorization', 'Bearer test-key')
             && $request['model'] === 'openai/gpt-oss-120b'
@@ -837,7 +844,8 @@ class CaldrenTest extends TestCase
         foreach ([['2026-08-01', '2026-08-31', 1000, 160], ['2026-09-01', '2026-09-30', 1200, 190]] as [$start,$end,$kwh,$amount]) {
             $this->actingAs($user)->post(route('buildings.bills', $building), ['period_start' => $start, 'period_end' => $end, 'kwh' => $kwh, 'amount' => $amount])->assertRedirect();
         }
-        $this->actingAs($user)->get(route('buildings.show', $building))->assertOk()->assertSee('Usage is rising')->assertSee('20.0%');
+        $this->actingAs($user)->get(route('buildings.data', $building))->assertOk()->assertSee('Bill history')->assertSee('1,200.0 kWh');
+        $this->assertDatabaseHas('operational_alerts', ['building_id' => $building->id, 'type' => 'bill_usage_change', 'status' => 'open']);
     }
 
     public function test_overlapping_bills_are_rejected(): void
@@ -870,7 +878,7 @@ class CaldrenTest extends TestCase
             $organization->buildings()->create(['name' => 'Existing Site '.$number, 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15]);
         }
 
-        $this->actingAs($user)->post(route('billing.demo'), ['demo_card' => '4242 4242 4242 4242', 'plan_key' => 'site'])->assertRedirect();
+        $this->actingAs($user)->post(route('billing.activate'), ['activation_code' => '4242 4242 4242 4242', 'plan_key' => 'site'])->assertRedirect();
         $this->actingAs($user)->post(route('buildings.store'), ['name' => 'Extra Site', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15])->assertSessionHasErrors('name');
 
         $this->assertSame(3, $organization->buildings()->count());
@@ -878,19 +886,19 @@ class CaldrenTest extends TestCase
         $this->actingAs($user)->get(route('buildings.index'))->assertSee('Existing Site 1');
     }
 
-    public function test_portfolio_demo_checkout_records_its_price_and_building_limit(): void
+    public function test_portfolio_activation_records_its_price_and_building_limit(): void
     {
         [$user, $organization] = $this->workspace();
         $organization->update(['trial_ends_at' => now()->subDay()]);
 
-        $this->actingAs($user)->post(route('billing.demo'), ['demo_card' => '4242 4242 4242 4242', 'plan_key' => 'portfolio'])->assertRedirect()->assertSessionHas('success');
+        $this->actingAs($user)->post(route('billing.activate'), ['activation_code' => '4242 4242 4242 4242', 'plan_key' => 'portfolio'])->assertRedirect()->assertSessionHas('success');
 
         $this->assertDatabaseHas('subscriptions', ['organization_id' => $organization->id, 'plan_key' => 'portfolio', 'monthly_price_cents' => 9900, 'status' => 'active']);
-        $this->assertDatabaseHas('demo_payments', ['organization_id' => $organization->id, 'amount_cents' => 9900, 'status' => 'simulated']);
+        $this->assertDatabaseHas('demo_payments', ['organization_id' => $organization->id, 'amount_cents' => 9900, 'status' => 'activated']);
         $this->assertSame(10, $organization->fresh()->buildingLimit());
     }
 
-    public function test_existing_campus_demo_access_remains_active_but_new_campus_checkout_is_rejected(): void
+    public function test_existing_campus_access_remains_active_but_new_campus_activation_is_rejected(): void
     {
         [$user, $organization] = $this->workspace();
         $organization->update(['trial_ends_at' => now()->subDay()]);
@@ -898,28 +906,28 @@ class CaldrenTest extends TestCase
         $organization->buildings()->create(['name' => 'Campus Site', 'timezone' => 'UTC', 'currency' => 'USD', 'energy_rate' => 0.15]);
 
         $this->actingAs($user)->get(route('billing'))->assertSee('Campus')->assertSee('$249')->assertDontSee('<option value="campus"', false);
-        $this->actingAs($user)->post(route('billing.demo'), ['demo_card' => '4242 4242 4242 4242', 'plan_key' => 'campus'])->assertSessionHasErrors('plan_key');
+        $this->actingAs($user)->post(route('billing.activate'), ['activation_code' => '4242 4242 4242 4242', 'plan_key' => 'campus'])->assertSessionHasErrors('plan_key');
 
         $this->assertTrue($organization->fresh()->hasAccess());
         $this->assertSame(1, $organization->buildings()->count());
         $this->assertDatabaseCount('demo_payments', 0);
     }
 
-    public function test_demo_checkout_rejects_an_unknown_plan_without_recording_payment(): void
+    public function test_plan_activation_rejects_an_unknown_plan_without_recording_access(): void
     {
         [$user, $organization] = $this->workspace();
         $organization->update(['trial_ends_at' => now()->subDay()]);
 
-        $this->actingAs($user)->post(route('billing.demo'), ['demo_card' => '4242 4242 4242 4242', 'plan_key' => 'unlimited'])->assertSessionHasErrors('plan_key');
+        $this->actingAs($user)->post(route('billing.activate'), ['activation_code' => '4242 4242 4242 4242', 'plan_key' => 'unlimited'])->assertSessionHasErrors('plan_key');
 
         $this->assertDatabaseCount('demo_payments', 0);
         $this->assertDatabaseHas('subscriptions', ['organization_id' => $organization->id, 'status' => 'trialing']);
     }
 
-    public function test_demo_checkout_rejects_other_numbers(): void
+    public function test_plan_activation_rejects_other_codes(): void
     {
         [$user] = $this->workspace();
-        $this->actingAs($user)->post(route('billing.demo'), ['demo_card' => '4111 1111 1111 1111', 'plan_key' => 'portfolio'])->assertSessionHasErrors('demo_card');
+        $this->actingAs($user)->post(route('billing.activate'), ['activation_code' => '4111 1111 1111 1111', 'plan_key' => 'portfolio'])->assertSessionHasErrors('activation_code');
         $this->assertDatabaseCount('demo_payments', 0);
     }
 
@@ -954,6 +962,7 @@ class CaldrenTest extends TestCase
         $this->actingAs($user)->post(route('buildings.forecast', $building))->assertSessionHas('error');
 
         $this->assertDatabaseHas('forecast_runs', ['building_id' => $building->id, 'status' => 'failed', 'source' => 'groq']);
+        $this->assertDatabaseHas('operational_alerts', ['building_id' => $building->id, 'type' => 'forecast_failed', 'status' => 'open']);
         $this->assertSame(14 * 24, $building->readings()->count());
         $this->assertDatabaseCount('forecast_points', 0);
     }
@@ -978,6 +987,7 @@ class CaldrenTest extends TestCase
         Http::fake(['api.groq.com/openai/v1/chat/completions' => Http::response($this->groqResponse(['days' => $days, 'recommendations' => []]), 200)]);
         $this->actingAs($user)->post(route('buildings.forecast', $building))->assertSessionHas('error');
         $this->assertDatabaseHas('forecast_runs', ['building_id' => $building->id, 'status' => 'failed']);
+        $this->assertDatabaseHas('operational_alerts', ['building_id' => $building->id, 'type' => 'forecast_failed', 'status' => 'open']);
         $this->assertDatabaseCount('forecast_points', 0);
     }
 }

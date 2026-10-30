@@ -10,7 +10,8 @@ use Illuminate\Validation\ValidationException;
 
 class UsageImporter
 {
-    public function import(Building $building, UploadedFile $file): int
+    /** @return array{row_count: int, inserted_count: int, updated_count: int, local_dates: array<int, string>} */
+    public function import(Building $building, UploadedFile $file): array
     {
         $handle = fopen($file->getRealPath(), 'rb');
         if (! $handle) {
@@ -66,9 +67,25 @@ class UsageImporter
             if (! $rows) {
                 throw ValidationException::withMessages(['file' => 'The CSV has no readings.']);
             }
+            $timestamps = array_column($rows, 'recorded_at');
+            $existingCount = DB::table('usage_readings')
+                ->where('building_id', $building->id)
+                ->whereIn('recorded_at', $timestamps)
+                ->count();
             DB::transaction(fn () => DB::table('usage_readings')->upsert($rows, ['building_id', 'recorded_at'], ['kwh', 'updated_at']));
 
-            return count($rows);
+            $localDates = collect($rows)
+                ->map(fn (array $row): string => CarbonImmutable::parse($row['recorded_at'], 'UTC')->setTimezone($building->timezone)->toDateString())
+                ->unique()
+                ->values()
+                ->all();
+
+            return [
+                'row_count' => count($rows),
+                'inserted_count' => count($rows) - $existingCount,
+                'updated_count' => $existingCount,
+                'local_dates' => $localDates,
+            ];
         } finally {
             fclose($handle);
         }

@@ -4,6 +4,12 @@ use App\Http\Controllers\Auth\AccountController;
 use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\CaldrenController;
+use App\Http\Controllers\Dashboard\AlertController;
+use App\Http\Controllers\Dashboard\AnalyticsController;
+use App\Http\Controllers\Dashboard\DataHealthController;
+use App\Http\Controllers\Dashboard\ForecastCenterController;
+use App\Http\Controllers\Dashboard\OpportunityController;
+use App\Http\Controllers\Dashboard\ReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'site.home')->name('home');
@@ -34,9 +40,25 @@ Route::post('/logout', [AccountController::class, 'logout'])->middleware('auth')
 Route::middleware('auth')->group(function () {
     Route::post('/dashboard/organization', [CaldrenController::class, 'switchOrganization'])->name('organization.switch');
     Route::get('/dashboard', [CaldrenController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard/analytics', AnalyticsController::class)->name('analytics');
+    Route::get('/dashboard/forecasts', ForecastCenterController::class)->name('forecasts.index');
+    Route::get('/dashboard/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/dashboard/reports/print', [ReportController::class, 'print'])->name('reports.print');
+    Route::get('/dashboard/reports/export/{type}', [ReportController::class, 'export'])->name('reports.export');
+    Route::get('/dashboard/opportunities', [OpportunityController::class, 'index'])->name('opportunities.index');
+    Route::post('/dashboard/opportunities', [OpportunityController::class, 'store'])->name('opportunities.store');
+    Route::patch('/dashboard/opportunities/{opportunity}', [OpportunityController::class, 'update'])->name('opportunities.update');
+    Route::get('/dashboard/alerts', [AlertController::class, 'index'])->name('alerts.index');
+    Route::patch('/dashboard/alerts/{alert}', [AlertController::class, 'update'])->name('alerts.update');
+    Route::get('/dashboard/data-health', DataHealthController::class)->name('data-health');
     Route::get('/dashboard/buildings', [CaldrenController::class, 'buildings'])->name('buildings.index');
     Route::post('/dashboard/buildings', [CaldrenController::class, 'createBuilding'])->name('buildings.store');
     Route::get('/dashboard/buildings/{building}', [CaldrenController::class, 'showBuilding'])->name('buildings.show');
+    Route::get('/dashboard/buildings/{building}/data', [CaldrenController::class, 'buildingData'])->name('buildings.data');
+    Route::get('/dashboard/buildings/{building}/forecasts', [CaldrenController::class, 'buildingForecasts'])->name('buildings.forecasts');
+    Route::get('/dashboard/buildings/{building}/opportunities', [CaldrenController::class, 'buildingOpportunities'])->name('buildings.opportunities');
+    Route::get('/dashboard/buildings/{building}/settings', [CaldrenController::class, 'buildingSettings'])->name('buildings.settings');
+    Route::patch('/dashboard/buildings/{building}/settings', [CaldrenController::class, 'updateBuildingSettings'])->name('buildings.settings.update');
     Route::post('/dashboard/buildings/{building}/upload', [CaldrenController::class, 'upload'])->name('buildings.upload');
     Route::post('/dashboard/buildings/{building}/bills', [CaldrenController::class, 'bill'])->name('buildings.bills');
     Route::post('/dashboard/buildings/{building}/forecast', [CaldrenController::class, 'forecast'])->middleware('throttle:5,1')->name('buildings.forecast');
@@ -44,5 +66,5 @@ Route::middleware('auth')->group(function () {
     Route::post('/dashboard/team/model-training-consent', [CaldrenController::class, 'updateModelTrainingConsent'])->name('team.model-training-consent');
     Route::post('/dashboard/team/invitations', [CaldrenController::class, 'invite'])->middleware('throttle:10,1')->name('team.invite');
     Route::get('/dashboard/billing', [CaldrenController::class, 'billing'])->name('billing');
-    Route::post('/dashboard/billing/demo-checkout', [CaldrenController::class, 'demoCheckout'])->middleware('throttle:5,1')->name('billing.demo');
+    Route::post('/dashboard/billing/activate', [CaldrenController::class, 'activatePlan'])->middleware('throttle:5,1')->name('billing.activate');
 });

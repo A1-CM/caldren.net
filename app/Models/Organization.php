@@ -31,6 +31,16 @@ class Organization extends Model
         return $this->hasOne(Subscription::class);
     }
 
+    public function opportunities(): HasMany
+    {
+        return $this->hasMany(Opportunity::class);
+    }
+
+    public function alerts(): HasMany
+    {
+        return $this->hasMany(OperationalAlert::class);
+    }
+
     public function hasOptedIntoModelTraining(): bool
     {
         return $this->model_training_opt_in_at !== null;
@@ -62,7 +72,7 @@ class Organization extends Model
     public function accessStatus(): string
     {
         if ($this->subscription?->status === 'active' && $this->subscription->current_period_ends_at?->isFuture()) {
-            return 'Demo active';
+            return 'Active';
         }
 
         return $this->trial_ends_at->isFuture() ? 'Trialing' : 'Trial ended';

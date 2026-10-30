@@ -7,7 +7,7 @@
         <a href="#privacy-access">Workspace access</a>
         <a href="#privacy-forecast">Forecast processing</a>
         <a href="#privacy-contact">Contact inquiries</a>
-        <a href="#privacy-payments">Demo payments</a>
+        <a href="#privacy-payments">Plan activation</a>
         <a href="#privacy-requests">Questions and requests</a>
     </nav>
     <div class="policy-content">
@@ -36,9 +36,9 @@
                 <p>If you use the general contact form, Caldren saves your name, email address, optional company name, and message. A Campus sales inquiry also includes your estimated building count, operating regions, available energy data, goals, and target timeline. Caldren attempts to email submitted inquiries to <a href="mailto:{{ config('mail.contact_to') }}">{{ config('mail.contact_to') }}</a> so the team can respond. If email delivery fails, the inquiry remains saved in Caldren’s database.</p>
             </section>
             <section id="privacy-payments" class="policy-section">
-                <span class="policy-section-number">05 / DEMO BILLING</span>
-                <h2>Demo payments</h2>
-                <p>The current checkout is a local simulation. Caldren records the simulated payment and access period, but it does not take a real payment or store payment card details.</p>
+                <span class="policy-section-number">05 / PLAN ACTIVATION</span>
+                <h2>Plan activation records</h2>
+                <p>Caldren records the selected plan reference and access period when an owner uses the displayed activation code. It does not collect card details or process a payment.</p>
             </section>
             <section id="privacy-requests" class="policy-section">
                 <span class="policy-section-number">06 / GET IN TOUCH</span>
@@ -46,7 +46,7 @@
                 <p>Email <a href="mailto:{{ config('mail.contact_to') }}">{{ config('mail.contact_to') }}</a> with questions about your information or to request deletion of your account and associated workspace data. Include enough information for us to identify the workspace; please do not email private meter data as part of the request.</p>
             </section>
         </article>
-        <div class="policy-next obs-light-glass"><i class="fa-solid fa-file-contract" aria-hidden="true"></i><div><strong>Using Caldren?</strong><p>Read the service terms for trial, forecast, and demo checkout details.</p></div><a href="{{ route('home') }}#terms">Read Terms</a></div>
+        <div class="policy-next obs-light-glass"><i class="fa-solid fa-file-contract" aria-hidden="true"></i><div><strong>Using Caldren?</strong><p>Read the service terms for trial, forecast, and plan activation details.</p></div><a href="{{ route('home') }}#terms">Read Terms</a></div>
     </div>
 </section>
 </details>

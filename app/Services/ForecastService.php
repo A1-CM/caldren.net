@@ -29,8 +29,10 @@ class ForecastService
 
         $history = $this->dailyHistory($readings, $building->timezone, $interval);
         for ($dayOffset = 0; $dayOffset < 14; $dayOffset++) {
-            $date = $firstDay->addDays($dayOffset)->toDateString();
-            $minimumReadings = (int) floor(1440 / $interval * .75);
+            $localDay = $firstDay->addDays($dayOffset)->startOfDay();
+            $date = $localDay->toDateString();
+            $localDayMinutes = $localDay->utc()->diffInMinutes($localDay->addDay()->utc());
+            $minimumReadings = (int) floor($localDayMinutes / $interval * .75);
             if (($history[$date]['count'] ?? 0) < $minimumReadings) {
                 throw ValidationException::withMessages(['forecast' => 'The last 14 complete days need at least 75% interval coverage each. Add the missing readings and retry.']);
             }

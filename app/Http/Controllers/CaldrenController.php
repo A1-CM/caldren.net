@@ -7,7 +7,11 @@ use App\Models\Building;
 use App\Models\ForecastModelRelease;
 use App\Models\Invitation;
 use App\Models\ModelTrainingConsentEvent;
+use App\Services\DailyEnergySummaryService;
+use App\Services\ForecastReadinessService;
 use App\Services\ForecastService;
+use App\Services\OperationalAlertService;
+use App\Services\OpportunityService;
 use App\Services\OrganizationContext;
 use App\Services\TurnstileVerifier;
 use App\Services\UsageImporter;
@@ -38,7 +42,7 @@ class CaldrenController extends Controller
     private function access(Request $request): void
     {
         if (! $this->organization($request)->hasAccess()) {
-            throw ValidationException::withMessages(['access' => 'Your trial has ended. Activate the demo subscription to continue.']);
+            throw ValidationException::withMessages(['access' => 'Your trial has ended. Activate a plan to continue uploads and forecasting.']);
         }
     }
 
@@ -118,13 +122,21 @@ class CaldrenController extends Controller
             ->with('sales_success', 'Thanks. Your Campus inquiry has been received.');
     }
 
-    public function dashboard(Request $request)
+    public function dashboard(Request $request, ForecastReadinessService $readiness)
     {
         $organization = $this->organization($request);
-        $buildings = $organization->buildings()->withCount(['readings', 'bills'])->orderBy('name')->get();
+        $buildings = $organization->buildings()->withCount(['readings', 'bills'])->with(['dailySummaries' => fn ($query) => $query->where('summary_date', '>=', now()->subDays(29))])->orderBy('name')->get();
         $recentForecasts = $organization->buildings()->with(['forecasts' => fn ($q) => $q->where('status', 'complete')->latest()->limit(1)])->get()->flatMap->forecasts;
+        $energyUse = $buildings->flatMap->dailySummaries->sum('kwh');
+        $estimatedCosts = $buildings->groupBy('currency')->map(fn ($group): float => round($group->sum(fn ($building): float => $building->dailySummaries->sum('kwh') * (float) $building->energy_rate), 2));
+        $highestPeak = $buildings->flatMap->dailySummaries->max('peak_kw') ?? 0;
+        $forecastReady = $buildings->filter(fn ($building): bool => $readiness->assess($building)['ready'])->count();
+        $openAlerts = $organization->alerts()->whereIn('status', ['open', 'acknowledged'])->count();
+        $activeOpportunities = $organization->opportunities()->whereNotIn('status', ['completed', 'dismissed'])->count();
+        $healthyBuildings = $buildings->filter(fn ($building): bool => ($building->dailySummaries->sortByDesc('summary_date')->first()?->coverage_percent ?? 0) >= 75)->count();
+        $topBuildings = $buildings->sortByDesc(fn ($building): float => (float) $building->dailySummaries->sum('kwh'))->take(5);
 
-        return view('dashboard.index', compact('organization', 'buildings', 'recentForecasts'));
+        return view('dashboard.index', compact('organization', 'buildings', 'recentForecasts', 'energyUse', 'estimatedCosts', 'highestPeak', 'forecastReady', 'openAlerts', 'activeOpportunities', 'healthyBuildings', 'topBuildings'));
     }
 
     public function buildings(Request $request)
@@ -151,28 +163,67 @@ class CaldrenController extends Controller
 
     public function showBuilding(Request $request, Building $building)
     {
+        return $this->buildingWorkspace($request, $building, 'overview');
+    }
+
+    public function buildingData(Request $request, Building $building)
+    {
+        return $this->buildingWorkspace($request, $building, 'data');
+    }
+
+    public function buildingForecasts(Request $request, Building $building)
+    {
+        return $this->buildingWorkspace($request, $building, 'forecasts');
+    }
+
+    public function buildingOpportunities(Request $request, Building $building)
+    {
+        return $this->buildingWorkspace($request, $building, 'opportunities');
+    }
+
+    public function buildingSettings(Request $request, Building $building)
+    {
+        return $this->buildingWorkspace($request, $building, 'settings');
+    }
+
+    private function buildingWorkspace(Request $request, Building $building, string $activeTab)
+    {
         $building = $this->building($request, $building);
         $organization = $this->organization($request);
+        $isOwner = $organization->users()->where('users.id', $request->user()->id)->wherePivot('role', 'owner')->exists();
         $bills = $building->bills()->latest('period_start')->limit(12)->get();
         $billChart = ['labels' => $bills->reverse()->map(fn ($bill) => $bill->period_start->format('M Y'))->values()->all(), 'amounts' => $bills->reverse()->map(fn ($bill) => (float) $bill->amount)->values()->all()];
         $readings = $building->readings()->latest('recorded_at')->limit(500)->get()->reverse()->values();
         $forecast = $building->forecasts()->where('status', 'complete')->latest()->with(['points', 'recommendations'])->first();
         $latestRun = $building->forecasts()->latest()->first();
+        $imports = $building->dataImports()->with('uploader')->latest()->limit(20)->get();
+        $summaries = $building->dailySummaries()->latest('summary_date')->limit(30)->get();
+        $opportunities = $building->opportunities()->with(['assignee', 'activities.user'])->latest()->get();
+        $alerts = $building->alerts()->latest('detected_at')->limit(20)->get();
 
-        return view('dashboard.building', compact('building', 'organization', 'bills', 'billChart', 'readings', 'forecast', 'latestRun'));
+        return view('dashboard.building', compact('building', 'organization', 'bills', 'billChart', 'readings', 'forecast', 'latestRun', 'imports', 'summaries', 'opportunities', 'alerts', 'activeTab', 'isOwner'));
     }
 
-    public function upload(Request $request, Building $building, UsageImporter $importer)
+    public function upload(Request $request, Building $building, UsageImporter $importer, DailyEnergySummaryService $summaries, OperationalAlertService $alerts)
     {
         $building = $this->building($request, $building);
         $this->access($request);
         $request->validate(['file' => 'required|file|max:5120|mimes:csv,txt']);
-        $count = $importer->import($building, $request->file('file'));
+        $dataImport = $building->dataImports()->create(['user_id' => $request->user()->id, 'filename' => mb_substr($request->file('file')->getClientOriginalName(), 0, 255), 'status' => 'processing']);
+        try {
+            $result = $importer->import($building, $request->file('file'));
+            $summaries->rebuild($building, $result['local_dates']);
+            $dataImport->update(['status' => 'completed', 'row_count' => $result['row_count'], 'inserted_count' => $result['inserted_count'], 'updated_count' => $result['updated_count'], 'completed_at' => now()]);
+            $alerts->afterImport($building->fresh());
+        } catch (\Throwable $error) {
+            $dataImport->update(['status' => 'failed', 'failure_reason' => mb_substr($error instanceof ValidationException ? collect($error->errors())->flatten()->first() : 'The file could not be processed.', 0, 500), 'completed_at' => now()]);
+            throw $error;
+        }
 
-        return back()->with('success', "Imported $count readings.");
+        return back()->with('success', "Imported {$result['row_count']} readings: {$result['inserted_count']} new and {$result['updated_count']} updated.");
     }
 
-    public function bill(Request $request, Building $building)
+    public function bill(Request $request, Building $building, OperationalAlertService $alerts)
     {
         $building = $this->building($request, $building);
         $this->access($request);
@@ -186,18 +237,40 @@ class CaldrenController extends Controller
         if ($overlaps) {
             throw ValidationException::withMessages(['period_start' => 'This bill overlaps a period already recorded for the building.']);
         }
-        $building->bills()->updateOrCreate(['period_start' => $data['period_start'], 'period_end' => $data['period_end']], ['kwh' => $data['kwh'], 'amount' => $data['amount']]);
+        $bill = $building->bills()->updateOrCreate(['period_start' => $data['period_start'], 'period_end' => $data['period_end']], ['kwh' => $data['kwh'], 'amount' => $data['amount']]);
+        $alerts->afterBill($building, $bill);
 
         return back()->with('success', 'Bill saved.');
     }
 
-    public function forecast(Request $request, Building $building, ForecastService $service)
+    public function forecast(Request $request, Building $building, ForecastService $service, OpportunityService $opportunities, OperationalAlertService $alerts)
     {
         $building = $this->building($request, $building);
         $this->access($request);
         $run = $service->generate($building);
+        if ($run->status === 'complete') {
+            $opportunities->createFromForecast($run);
+        }
+        $alerts->afterForecast($building, $run);
 
         return back()->with($run->status === 'complete' ? 'success' : 'error', $run->status === 'complete' ? 'Seven-day forecast updated.' : 'The forecast could not be generated. Historical data is still available; please retry later.');
+    }
+
+    public function updateBuildingSettings(Request $request, Building $building): RedirectResponse
+    {
+        $building = $this->building($request, $building);
+        $organization = $this->organization($request);
+        abort_unless($organization->users()->where('users.id', $request->user()->id)->wherePivot('role', 'owner')->exists(), 403);
+        $data = $request->validate([
+            'name' => 'required|string|max:160', 'location' => 'nullable|string|max:160', 'timezone' => 'required|timezone', 'currency' => 'required|string|size:3',
+            'energy_rate' => 'required|numeric|min:0|max:100000', 'peak_rate' => 'nullable|numeric|min:0|max:100000', 'peak_start_hour' => 'nullable|integer|between:0,23', 'peak_end_hour' => 'nullable|integer|between:0,23',
+            'forecast_peak_threshold_percent' => 'required|numeric|min:0|max:500', 'bill_change_threshold_percent' => 'required|numeric|min:0|max:500', 'coverage_alert_threshold_percent' => 'required|numeric|min:1|max:100', 'stale_after_hours' => 'required|integer|min:1|max:8760', 'alerts_enabled' => 'nullable|boolean',
+        ]);
+        $data['currency'] = strtoupper($data['currency']);
+        $data['alerts_enabled'] = $request->boolean('alerts_enabled');
+        $building->update($data);
+
+        return back()->with('success', 'Building settings updated.');
     }
 
     public function team(Request $request)
@@ -307,24 +380,24 @@ class CaldrenController extends Controller
         return view('dashboard.billing', compact('organization', 'payments', 'isOwner', 'plans', 'checkoutPlans', 'selectedPlanKey'));
     }
 
-    public function demoCheckout(Request $request)
+    public function activatePlan(Request $request)
     {
         $organization = $this->organization($request);
         abort_unless($organization->users()->where('users.id', $request->user()->id)->wherePivot('role', 'owner')->exists(), 403);
         $data = $request->validate([
-            'demo_card' => 'required|string',
+            'activation_code' => 'required|string',
             'plan_key' => ['required', 'string', 'in:'.implode(',', array_keys(array_filter(config('plans'), fn (array $plan): bool => $plan['checkout_enabled'] ?? false)))],
         ]);
-        if (preg_replace('/\s+/', '', $data['demo_card']) !== '4242424242424242') {
-            throw ValidationException::withMessages(['demo_card' => 'Use the displayed 4242 demo card number. No real cards are accepted.']);
+        if (preg_replace('/\s+/', '', $data['activation_code']) !== '4242424242424242') {
+            throw ValidationException::withMessages(['activation_code' => 'Use the displayed plan activation code.']);
         }
         $plan = config('plans.'.$data['plan_key']);
         DB::transaction(function () use ($organization, $data, $plan) {
             $start = collect([$organization->trial_ends_at, $organization->subscription?->current_period_ends_at, now()])->filter()->sort()->last();
             $organization->subscription()->updateOrCreate(['organization_id' => $organization->id], ['plan_key' => $data['plan_key'], 'status' => 'active', 'monthly_price_cents' => $plan['monthly_price_cents'], 'current_period_ends_at' => $start->copy()->addMonth()]);
-            DB::table('demo_payments')->insert(['organization_id' => $organization->id, 'amount_cents' => $plan['monthly_price_cents'], 'currency' => 'USD', 'status' => 'simulated', 'demo_reference' => (string) Str::uuid(), 'created_at' => now(), 'updated_at' => now()]);
+            DB::table('demo_payments')->insert(['organization_id' => $organization->id, 'amount_cents' => $plan['monthly_price_cents'], 'currency' => 'USD', 'status' => 'activated', 'demo_reference' => (string) Str::uuid(), 'created_at' => now(), 'updated_at' => now()]);
         });
 
-        return back()->with('success', 'Demo payment simulated for '.$plan['name'].'. Access is active for one month; no money was charged.');
+        return back()->with('success', $plan['name'].' access is active for one month. No card details were collected and no payment was processed.');
     }
 }
