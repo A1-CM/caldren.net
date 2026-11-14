@@ -10,6 +10,7 @@ use App\Http\Controllers\Dashboard\DataHealthController;
 use App\Http\Controllers\Dashboard\ForecastCenterController;
 use App\Http\Controllers\Dashboard\OpportunityController;
 use App\Http\Controllers\Dashboard\ReportController;
+use App\Http\Controllers\SiteAssistantController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'site.home')->name('home');
@@ -21,6 +22,7 @@ Route::redirect('/privacy', '/#privacy', 301)->name('privacy');
 Route::redirect('/terms', '/#terms', 301)->name('terms');
 Route::post('/contact', [CaldrenController::class, 'contact'])->middleware('throttle:5,1')->name('contact.store');
 Route::post('/contact/campus-sales', [CaldrenController::class, 'campusSalesInquiry'])->middleware('throttle:5,1')->name('contact.sales.store');
+Route::post('/assistant/chat', SiteAssistantController::class)->middleware('throttle:10,1')->name('assistant.chat');
 Route::middleware('guest')->group(function () {
     Route::post('/oauth/start', [OAuthController::class, 'start'])->middleware('throttle:5,1')->name('oauth.start');
     Route::get('/auth/{provider}/callback', [OAuthController::class, 'callback'])->whereIn('provider', ['google', 'github'])->name('oauth.callback');

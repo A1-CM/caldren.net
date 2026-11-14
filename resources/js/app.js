@@ -389,3 +389,108 @@ if (footerRevealElements.length && 'IntersectionObserver' in window) {
     if (event.matches) clearFooterReveal();
   });
 }
+
+const siteAssistant = document.querySelector('[data-site-assistant]');
+if (siteAssistant instanceof HTMLElement) {
+  const panel = siteAssistant.querySelector('#site-assistant-panel');
+  const toggle = siteAssistant.querySelector('[data-assistant-toggle]');
+  const close = siteAssistant.querySelector('[data-assistant-close]');
+  const form = siteAssistant.querySelector('[data-assistant-form]');
+  const input = siteAssistant.querySelector('[data-assistant-input]');
+  const send = siteAssistant.querySelector('[data-assistant-send]');
+  const messagesElement = siteAssistant.querySelector('[data-assistant-messages]');
+  const status = siteAssistant.querySelector('[data-assistant-status]');
+  const endpoint = siteAssistant.dataset.endpoint;
+  const conversation = [];
+
+  const addMessage = (role, content) => {
+    const message = document.createElement('p');
+    message.className = `site-assistant-message ${role === 'user' ? 'user-message' : 'assistant-message'}`;
+    message.textContent = content;
+    messagesElement?.append(message);
+    messagesElement?.scrollTo({top: messagesElement.scrollHeight, behavior: reducedMotionQuery.matches ? 'auto' : 'smooth'});
+    return message;
+  };
+
+  const openPanel = () => {
+    if (!panel || !toggle) return;
+    panel.hidden = false;
+    toggle.setAttribute('aria-expanded', 'true');
+    input?.focus();
+  };
+
+  const closePanel = () => {
+    if (!panel || !toggle) return;
+    panel.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+  };
+
+  toggle?.addEventListener('click', () => {
+    if (panel?.hidden) openPanel();
+    else closePanel();
+  });
+  close?.addEventListener('click', () => {
+    closePanel();
+    toggle?.focus();
+  });
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!(input instanceof HTMLTextAreaElement) || !endpoint || !send || !status) return;
+
+    const question = input.value.trim();
+    if (!question) return;
+
+    addMessage('user', question);
+    input.value = '';
+    input.disabled = true;
+    send.disabled = true;
+    status.textContent = 'Caldren is preparing a reply…';
+    const pendingReply = addMessage('assistant', 'Thinking…');
+    const requestMessages = [...conversation.slice(-7), {role: 'user', content: question}];
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': form.querySelector('input[name="_token"]')?.value ?? '',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({messages: requestMessages}),
+      });
+      const result = await response.json();
+      if (!response.ok || typeof result.reply !== 'string') {
+        throw new Error(result.message || 'The assistant could not answer right now. Please try again.');
+      }
+
+      pendingReply.textContent = result.reply;
+      conversation.push({role: 'user', content: question}, {role: 'assistant', content: result.reply});
+      conversation.splice(0, Math.max(0, conversation.length - 8));
+      status.textContent = 'Reply received.';
+    } catch (error) {
+      pendingReply.textContent = error instanceof Error ? error.message : 'The assistant could not answer right now. Please try again.';
+      pendingReply.classList.add('assistant-error');
+      status.textContent = 'Reply unavailable.';
+    } finally {
+      input.disabled = false;
+      send.disabled = false;
+      input.focus();
+    }
+  });
+
+  input?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      form?.requestSubmit();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && panel && !panel.hidden) {
+      closePanel();
+      toggle?.focus();
+    }
+  });
+}
