@@ -9722,6 +9722,23 @@ tr:last-child td {
     line-height: 1.6
 }
 
+.footer-addresses {
+    display: grid;
+    gap: 10px;
+    max-width: 360px;
+    margin-top: 18px;
+    color: #abc1c2;
+    font-size: 11px;
+    font-style: normal;
+    line-height: 1.65
+}
+
+.footer-addresses strong {
+    color: #e4efeb;
+    font-size: 11px;
+    font-weight: 700
+}
+
 .footer-link-group {
     display: flex;
     flex-direction: column;

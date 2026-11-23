@@ -47,6 +47,10 @@
             <div class="footer-brand-block">
                 <a class="brand" href="{{ route('home') }}" aria-label="Caldren home"><img class="brand-logo" src="{{ asset('images/logo.webp') }}" alt="" width="2731" height="1535"></a>
                 <p>AI energy forecasting and optimization insights for energy teams.</p>
+                <address class="footer-addresses">
+                    <span><strong>Sri Lanka</strong> · Caldren Solutions (Pvt) Ltd<br>No. 24, Wakwella Road, Galle</span>
+                    <span><strong>United States</strong> · Caldren Solutions Inc.<br>1200 South Figueroa Street, Los Angeles, CA 90015</span>
+                </address>
             </div>
             <nav class="footer-link-group" aria-label="Explore Caldren">
                 <h3>Explore</h3>
